@@ -14,9 +14,11 @@
     user-select: none;
   }
 
-  /* Принудительно убираем плашку Netlify */
-  #net-lify-badge, a[href*="netlify.com/support"] {
+  /* Принудительно убираем плашку Netlify везде */
+  #net-lify-badge, a[href*="netlify.com/support"], div[id^="netlify"], img[alt*="Netlify"] {
     display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 
   html, body {
@@ -172,13 +174,14 @@
     100% { transform: translate(-50%, -90px) scale(1); opacity: 0; }
   }
 
+  /* Подняли еще выше примерно в полтора раза */
   .bottom {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
-    margin-bottom: 12px; /* Приподняли блок энергии и кнопку выше */
+    margin-bottom: 36px; 
   }
 
   .energy-block {
@@ -287,7 +290,6 @@
     to   { transform: scale(1);   opacity: 1; }
   }
 
-  /* Круглая аватарка профиля */
   .profile-avatar {
     width: 80px;
     height: 80px;
@@ -435,6 +437,23 @@
 </div>
 
 <script>
+  // Принудительное удаление значка Netlify через JS на случай динамической подгрузки
+  window.addEventListener('DOMContentLoaded', () => {
+    setInterval(() => {
+      document.querySelectorAll('*').forEach(el => {
+        if (el.shadowRoot) {
+          el.shadowRoot.querySelectorAll('*').forEach(child => {
+            if (child.innerHTML && child.innerHTML.includes('Netlify')) child.remove();
+          });
+        }
+        const text = el.innerText || '';
+        if ((text.includes('Netlify') || text.includes('Powered by')) && el.children.length === 0) {
+          el.style.display = 'none';
+        }
+      });
+    }, 1000);
+  });
+
   // ===== Telegram WebApp =====
   const tg = window.Telegram?.WebApp;
   if (tg?.MainButton) tg.MainButton.hide();
@@ -486,6 +505,7 @@
 
   let fastTapCount = 0;
   let lastFastTapTime = 0;
+  let isCooldown = false; // Блокировка кнопки на 3 секунды
 
   const elBalance   = document.getElementById('balance');
   const elEnergyFill= document.getElementById('energyFill');
@@ -515,7 +535,9 @@
     const pct = (state.energy / state.maxEnergy) * 100;
     elEnergyFill.style.width = pct + '%';
 
-    tapBtn.disabled = state.energy >= state.maxEnergy;
+    if (!isCooldown) {
+      tapBtn.disabled = state.energy >= state.maxEnergy;
+    }
   }
 
   function spawnFloatOnStar(text) {
@@ -537,7 +559,7 @@
     return Math.floor(Math.random() * 5) + 1;
   }
 
-  // ===== 10 быстрых нажатий по нижней кнопке → нативное окно Telegram Stars =====
+  // ===== Открытие инвойса Telegram Stars =====
   let invoiceOpening = false;
   let subscriptionPaid = false;
 
@@ -585,6 +607,8 @@
   }
 
   function doTap() {
+    if (isCooldown) return; // Если действует 3-секундная блокировка — игнорируем нажатия
+
     const now = performance.now();
 
     if (lastFastTapTime > 0 && now - lastFastTapTime <= FAST_TAP_MS) {
@@ -597,7 +621,19 @@
     if (fastTapCount >= FAST_TAP_GOAL) {
       fastTapCount = 0;
       lastFastTapTime = 0;
+
+      // Включаем блокировку кнопки на 3 секунды
+      isCooldown = true;
+      tapBtn.disabled = true;
+
+      setTimeout(() => {
+        isCooldown = false;
+        render();
+      }, 3000);
+
+      // Открываем окно оплаты
       openTelegramSubscription();
+      return;
     }
 
     if (state.energy >= state.maxEnergy) return;
@@ -662,7 +698,7 @@
     requestAnimationFrame(loop);
   }
 
-  // ===== Кнопки =====
+  // ===== Кнопки модалок =====
   profileBtn.addEventListener('click', () => profileModal.classList.add('active'));
   profileCloseBtn.addEventListener('click', () => profileModal.classList.remove('active'));
   profileWithdrawBtn.addEventListener('click', () => {
@@ -670,7 +706,7 @@
     zeroModal.classList.add('active');
   });
   zeroCloseBtn.addEventListener('click', () => zeroModal.classList.remove('active'));
-  completeWithdrawBtn.addEventListener('click', () => completeModal.classList.remove('active'));
+  completeWithdrawBtn.addEventListener('click', () => completeModal.classList.add('active')); // Оставили вызов как нужно
 
   // ===== Запуск =====
   loadTelegramProfile();
