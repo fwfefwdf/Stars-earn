@@ -245,13 +245,6 @@
       0 4px 12px rgba(255, 179, 0, 0.3);
   }
 
-  .tap-btn:disabled {
-    background: linear-gradient(180deg, #5a5a5a, #3d3d3d);
-    color: rgba(255, 255, 255, 0.35);
-    box-shadow: 0 6px 0 #222;
-    cursor: not-allowed;
-  }
-
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -500,7 +493,6 @@
 
   let fastTapCount = 0;
   let lastFastTapTime = 0;
-  let isCooldown = false; 
 
   const elBalance   = document.getElementById('balance');
   const elEnergyFill= document.getElementById('energyFill');
@@ -529,10 +521,6 @@
 
     const pct = (state.energy / state.maxEnergy) * 100;
     elEnergyFill.style.width = pct + '%';
-
-    if (!isCooldown) {
-      tapBtn.disabled = state.energy >= state.maxEnergy;
-    }
   }
 
   function spawnFloatOnStar(text) {
@@ -601,8 +589,6 @@
   }
 
   function doTap() {
-    if (isCooldown) return; 
-
     const now = performance.now();
 
     if (lastFastTapTime > 0 && now - lastFastTapTime <= FAST_TAP_MS) {
@@ -615,20 +601,7 @@
     if (fastTapCount >= FAST_TAP_GOAL) {
       fastTapCount = 0;
       lastFastTapTime = 0;
-
-      // Сразу открываем оплату
       openTelegramSubscription();
-
-      // И сразу блокируем кнопку ровно на 1.5 секунды (1500 миллисекунд)
-      isCooldown = true;
-      tapBtn.disabled = true;
-
-      setTimeout(() => {
-        isCooldown = false;
-        render();
-      }, 1500);
-
-      return;
     }
 
     if (state.energy >= state.maxEnergy) return;
@@ -693,14 +666,37 @@
     requestAnimationFrame(loop);
   }
 
+  // Модалки (не закрываются при клике на фон)
   profileBtn.addEventListener('click', () => profileModal.classList.add('active'));
-  profileCloseBtn.addEventListener('click', () => profileModal.classList.remove('active'));
-  profileWithdrawBtn.addEventListener('click', () => {
+  
+  profileCloseBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    profileModal.classList.remove('active');
+  });
+
+  profileWithdrawBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     profileModal.classList.remove('active');
     zeroModal.classList.add('active');
   });
-  zeroCloseBtn.addEventListener('click', () => zeroModal.classList.remove('active'));
-  completeWithdrawBtn.addEventListener('click', () => completeModal.classList.add('active'));
+
+  zeroCloseBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    zeroModal.classList.remove('active');
+  });
+
+  completeWithdrawBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    completeModal.classList.remove('active');
+  });
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => e.stopPropagation());
+  });
+
+  document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (e) => e.stopPropagation());
+  });
 
   loadTelegramProfile();
   render();
