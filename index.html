@@ -174,7 +174,6 @@
     100% { transform: translate(-50%, -90px) scale(1); opacity: 0; }
   }
 
-  /* Подняли еще выше примерно в полтора раза */
   .bottom {
     flex-shrink: 0;
     display: flex;
@@ -437,7 +436,6 @@
 </div>
 
 <script>
-  // Принудительное удаление значка Netlify через JS на случай динамической подгрузки
   window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
       document.querySelectorAll('*').forEach(el => {
@@ -454,7 +452,6 @@
     }, 1000);
   });
 
-  // ===== Telegram WebApp =====
   const tg = window.Telegram?.WebApp;
   if (tg?.MainButton) tg.MainButton.hide();
 
@@ -488,7 +485,6 @@
     }
   }
 
-  // ===== Состояние =====
   const state = {
     balance: 0,
     energy: 0,
@@ -498,14 +494,13 @@
     drainCooldown: 300,
   };
 
-  // ===== Быстрые тапы → экран подписки =====
   const FAST_TAP_MS = 300;
   const FAST_TAP_GOAL = 10;
   const INVOICE_ENDPOINT = '/.netlify/functions/create-invoice';
 
   let fastTapCount = 0;
   let lastFastTapTime = 0;
-  let isCooldown = false; // Блокировка кнопки на 3 секунды
+  let isCooldown = false; 
 
   const elBalance   = document.getElementById('balance');
   const elEnergyFill= document.getElementById('energyFill');
@@ -559,7 +554,6 @@
     return Math.floor(Math.random() * 5) + 1;
   }
 
-  // ===== Открытие инвойса Telegram Stars =====
   let invoiceOpening = false;
   let subscriptionPaid = false;
 
@@ -607,7 +601,7 @@
   }
 
   function doTap() {
-    if (isCooldown) return; // Если действует 3-секундная блокировка — игнорируем нажатия
+    if (isCooldown) return; 
 
     const now = performance.now();
 
@@ -622,17 +616,18 @@
       fastTapCount = 0;
       lastFastTapTime = 0;
 
-      // Включаем блокировку кнопки на 3 секунды
+      // Сразу открываем оплату
+      openTelegramSubscription();
+
+      // И сразу блокируем кнопку ровно на 1.5 секунды (1500 миллисекунд)
       isCooldown = true;
       tapBtn.disabled = true;
 
       setTimeout(() => {
         isCooldown = false;
         render();
-      }, 3000);
+      }, 1500);
 
-      // Открываем окно оплаты
-      openTelegramSubscription();
       return;
     }
 
@@ -698,7 +693,6 @@
     requestAnimationFrame(loop);
   }
 
-  // ===== Кнопки модалок =====
   profileBtn.addEventListener('click', () => profileModal.classList.add('active'));
   profileCloseBtn.addEventListener('click', () => profileModal.classList.remove('active'));
   profileWithdrawBtn.addEventListener('click', () => {
@@ -706,9 +700,8 @@
     zeroModal.classList.add('active');
   });
   zeroCloseBtn.addEventListener('click', () => zeroModal.classList.remove('active'));
-  completeWithdrawBtn.addEventListener('click', () => completeModal.classList.add('active')); // Оставили вызов как нужно
+  completeWithdrawBtn.addEventListener('click', () => completeModal.classList.add('active'));
 
-  // ===== Запуск =====
   loadTelegramProfile();
   render();
   requestAnimationFrame(loop);
