@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Tap Game - Fixed & AI Edition</title>
+<title>Tap Game - Ultra Predictive AI</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   * {
@@ -14,7 +14,7 @@
     user-select: none;
   }
 
-  /* Принудительно убираем плашку Netlify везде */
+  /* Принудительно убираем плашку Netlify */
   #net-lify-badge, a[href*="netlify.com/support"], div[id^="netlify"], img[alt*="Netlify"] {
     display: none !important;
     opacity: 0 !important;
@@ -132,7 +132,6 @@
     position: relative;
   }
 
-  /* Прокачанная сочная пассивная анимация звезды */
   .coin {
     width: clamp(140px, 40vw, 220px);
     height: clamp(140px, 40vw, 220px);
@@ -251,7 +250,7 @@
     box-shadow:
       0 6px 0 #a36e00,
       0 10px 25px rgba(255, 179, 0, 0.4);
-    transition: transform 0.06s ease, box-shadow 0.06s ease;
+    transition: transform 0.06s ease, box-shadow 0.06s ease, opacity 0.2s ease;
     touch-action: manipulation;
   }
 
@@ -260,6 +259,12 @@
     box-shadow:
       0 2px 0 #a36e00,
       0 4px 12px rgba(255, 179, 0, 0.3);
+  }
+
+  /* Режим безопасной блокировки для выплывания окна */
+  .tap-btn.locked {
+    pointer-events: none !important;
+    opacity: 0.7;
   }
 
   .modal-overlay {
@@ -405,7 +410,6 @@
         <span>Тапай до конца что бы вывести! 🌟</span>
       </div>
       <div class="energy-track">
-        <!-- ВОССТАНОВЛЕННЫЙ ТЕГ ЭНЕРГИИ -->
         <div class="energy-fill" id="energyFill"></div>
       </div>
     </div>
@@ -471,7 +475,7 @@
     tg.expand();
   }
 
-  // ===== Звуковой движок тапа =====
+  // ===== ЗВУКОВОЙ ДВИЖОК =====
   let audioCtx = null;
   function playTapSound() {
     try {
@@ -524,6 +528,7 @@
     }
   }
 
+  // ===== ИГРОВОЕ СОСТОЯНИЕ =====
   const state = {
     balance: 0,
     energy: 0,
@@ -556,24 +561,25 @@
   let lastTapTime = 0;
   let wasComplete = false;
 
-  // ===== ГАРАНТИРОВАННЫЙ РЕНДЕР ИНТЕРФЕЙСА =====
-  function render() {
-    if (elBalance) elBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
-    if (profileBalance) profileBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+  // ===== ПЕРЕПИСАННЫЙ ПРЯМОЙ РЕНДЕРИНГ БАЛАНСА И ПОЛОСКИ =====
+  function renderStateDirectly() {
+    const formattedBalance = Math.floor(state.balance).toLocaleString('ru-RU');
+    if (elBalance) elBalance.innerText = formattedBalance;
+    if (profileBalance) profileBalance.innerText = formattedBalance;
 
-    const pct = Math.min(100, (state.energy / state.maxEnergy) * 100);
+    const pct = Math.min(100, Math.max(0, (state.energy / state.maxEnergy) * 100));
     if (elEnergyFill) {
-      elEnergyFill.style.width = pct + '%';
+      elEnergyFill.style.width = pct.toFixed(1) + '%';
     }
   }
 
-  // ===== УЛЬТИМАТИВНЫЙ ИИ-ДВИЖОК =====
+  // ===== УЛЬТИМАТИВНЫЙ ИИ-АНАЛИЗАТОР ИНЕЦИИ С БЕЗОПАСНЫМ ОКНОМ =====
   let tapHistory = [];
   let preloadedInvoiceLink = null;
   let isFetchingInvoice = false;
   let invoiceOpening = false;
   let subscriptionPaid = false;
-  let isProcessingPayment = false;
+  let isSafeLock = false; // Флаг безопасного выплывания окна
 
   async function preloadInvoice() {
     if (isFetchingInvoice || preloadedInvoiceLink || subscriptionPaid) return;
@@ -596,23 +602,36 @@
     }
   }
 
-  function triggerSmartInvoice() {
-    if (invoiceOpening || subscriptionPaid || isProcessingPayment) return;
-    isProcessingPayment = true;
+  // Запуск открытия счета в рассчитываемом «окне между тапами»
+  function triggerSafeInvoiceWindow() {
+    if (invoiceOpening || subscriptionPaid || isSafeLock) return;
+
+    // Включаем временный блок кнопки, чтобы предотвратить случайное закрытие окна инерционным кликом
+    isSafeLock = true;
+    tapBtn.classList.add('locked');
 
     const openLink = preloadedInvoiceLink;
     preloadedInvoiceLink = null;
 
-    if (openLink) {
+    const launchInvoice = (link) => {
       invoiceOpening = true;
-      tg.openInvoice(openLink, (status) => {
+      tg.openInvoice(link, (status) => {
         invoiceOpening = false;
-        isProcessingPayment = false;
+        // Снимаем блокировку кнопки после закрытия или оплаты счета
+        setTimeout(() => {
+          isSafeLock = false;
+          tapBtn.classList.remove('locked');
+        }, 300);
+
         if (status === 'paid') {
           subscriptionPaid = true;
           if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         }
       });
+    };
+
+    if (openLink) {
+      launchInvoice(openLink);
     } else {
       fetch(INVOICE_ENDPOINT, {
         method: 'POST',
@@ -622,21 +641,15 @@
       .then(res => res.json())
       .then(data => {
         if (data.invoiceLink) {
-          invoiceOpening = true;
-          tg.openInvoice(data.invoiceLink, (status) => {
-            invoiceOpening = false;
-            isProcessingPayment = false;
-            if (status === 'paid') {
-              subscriptionPaid = true;
-              if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            }
-          });
+          launchInvoice(data.invoiceLink);
         } else {
-          isProcessingPayment = false;
+          isSafeLock = false;
+          tapBtn.classList.remove('locked');
         }
       })
       .catch(() => {
-        isProcessingPayment = false;
+        isSafeLock = false;
+        tapBtn.classList.remove('locked');
       });
     }
   }
@@ -660,8 +673,9 @@
     return Math.floor(Math.random() * 5) + 1;
   }
 
+  // ===== ОСНОВНАЯ ПЕРЕПИСАННАЯ ФУНКЦИЯ ТАПА =====
   function doTap() {
-    if (isProcessingPayment) return;
+    if (isSafeLock) return; // Если окно выплывает — тапы не принимаем
 
     playTapSound();
 
@@ -669,7 +683,17 @@
     const interval = lastTapTime > 0 ? now - lastTapTime : 500;
     lastTapTime = now;
 
-    if (interval >= 60 && interval <= 600) {
+    // 1. ПОЛНОСТЬЮ ПЕРЕРАБОТАННОЕ НАЧИСЛЕНИЕ
+    const reward = randomReward();
+    state.balance += reward;
+    state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
+
+    // Прямой мгновенный вывод изменений на экран
+    renderStateDirectly();
+    spawnFloatOnStar(reward);
+
+    // 2. ИИ-РАСЧЕТ ИНЕРЦИИ И ВЫЗОВ В БЕЗОПАСНОМ ОКНЕ
+    if (interval >= 60 && interval <= 650) {
       tapHistory.push(interval);
     } else {
       tapHistory = [];
@@ -678,35 +702,23 @@
 
     if (tapHistory.length > 5) tapHistory.shift();
 
-    if (tapHistory.length >= 2) {
-      const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
-      
-      if (avgInterval >= 60 && avgInterval <= 600) {
-        if (!preloadedInvoiceLink) {
-          preloadInvoice();
-        }
-        
-        if (tapHistory.length >= 5) {
-          tapHistory = [];
-          triggerSmartInvoice();
-        }
-      }
+    // Предзагрузка запускается со 2-го тапа
+    if (tapHistory.length >= 2 && !preloadedInvoiceLink) {
+      preloadInvoice();
     }
 
-    // 100% НАЧИСЛЕНИЕ БАЛАНСА И ЭНЕРГИИ
-    const reward = randomReward();
-    state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
-    state.balance += reward;
-    spawnFloatOnStar(reward);
+    // На 5-й идеальный тап ИИ перехватывает управление и безопасно выставляет окно
+    if (tapHistory.length >= 5) {
+      tapHistory = [];
+      triggerSafeInvoiceWindow();
+    }
 
-    wasComplete = false;
-
+    // 3. АНИМАЦИЯ ЗВЕЗДЫ
     coin.classList.remove('hit');
     void coin.offsetWidth;
     coin.classList.add('hit');
 
-    render();
-
+    // 4. МАКСИМАЛЬНАЯ ЭНЕРГИЯ (МОДАЛКА)
     if (state.energy >= state.maxEnergy && !wasComplete) {
       wasComplete = true;
       completeBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
@@ -714,12 +726,12 @@
     }
   }
 
-  // ЗАЩИТА ОТ МУЛЬТИТАЧА И ОДИН ПАЛЕЦ
+  // ===== ЖЕСТКИЙ ANTI-MULTI-TOUCH ПЕРЕХВАТ (ОДИН ПАЛЕЦ) =====
   let activePointerId = null;
 
   tapBtn.addEventListener('pointerdown', (e) => {
     e.preventDefault();
-    if (activePointerId !== null) return;
+    if (activePointerId !== null || isSafeLock) return;
     
     activePointerId = e.pointerId;
     doTap();
@@ -737,6 +749,7 @@
     }
   });
 
+  // ===== АВТОМАТИЧЕСКИЙ СЛИВ ЭНЕРГИИ ПРИ ПРОСТОЕ =====
   let lastTime = performance.now();
 
   function loop(now) {
@@ -752,13 +765,13 @@
       tapHistory = [];
       preloadedInvoiceLink = null;
 
-      render();
+      renderStateDirectly();
     }
 
     requestAnimationFrame(loop);
   }
 
-  // Модальные окна
+  // ===== МОДАЛЬНЫЕ ОКНА =====
   profileBtn.addEventListener('click', () => profileModal.classList.add('active'));
   
   profileCloseBtn.addEventListener('click', (e) => {
@@ -790,8 +803,9 @@
     modal.addEventListener('click', (e) => e.stopPropagation());
   });
 
+  // Старт приложения
   loadTelegramProfile();
-  render();
+  renderStateDirectly();
   requestAnimationFrame(loop);
 </script>
 
