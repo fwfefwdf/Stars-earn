@@ -132,7 +132,6 @@
     position: relative;
   }
 
-  /* Прокачанная сочная пассивная анимация звезды */
   .coin {
     width: clamp(140px, 40vw, 220px);
     height: clamp(140px, 40vw, 220px);
@@ -470,7 +469,6 @@
     tg.expand();
   }
 
-  // ===== Звуковой движок тапа =====
   let audioCtx = null;
   function playTapSound() {
     try {
@@ -525,9 +523,9 @@
 
   const state = {
     balance: 0,
-    energy: 0,
+    energy: 0,         // Старт с 0, шкала будет расти при тапах
     maxEnergy: 1500,
-    tapGain: 12,
+    tapGain: 50,       // Увеличено для более быстрого заполнения полоски
     drainPerSec: 80,
     drainCooldown: 450,
   };
@@ -555,7 +553,6 @@
   let lastTapTime = 0;
   let wasComplete = false;
 
-  // ===== РЕНДЕР ИНТЕРФЕЙСА =====
   function render() {
     elBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
     profileBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
@@ -566,7 +563,6 @@
     }
   }
 
-  // ===== ПРОКАЧАННЫЙ ИИ ДЛЯ ВЫСОКИХ СКОРОСТЕЙ И ИНЕРЦИИ =====
   let tapHistory = [];
   let preloadedInvoiceLink = null;
   let isFetchingInvoice = false;
@@ -678,7 +674,6 @@
     const interval = lastTapTime > 0 ? now - lastTapTime : 500;
     lastTapTime = now;
 
-    // Умный ИИ с автоадаптацией под любые высокие скорости (от 80 мс до 600 мс)
     if (interval >= 80 && interval <= 600) {
       tapHistory.push(interval);
     } else {
@@ -688,7 +683,6 @@
 
     if (tapHistory.length > 5) tapHistory.shift();
 
-    // Предиктивный расчет инерции: предзагрузка со 2-го тапа, моментальный выстрел на 5-м
     if (tapHistory.length >= 2) {
       const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
       
@@ -704,13 +698,10 @@
       }
     }
 
-    // НАЧИСЛЕНИЕ БАЛАНСА И ЭНЕРГИИ
     const reward = randomReward();
     state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
     state.balance += reward;
     spawnFloatOnStar(reward);
-
-    wasComplete = false;
 
     coin.classList.remove('hit');
     void coin.offsetWidth;
@@ -735,7 +726,6 @@
 
     const timeSinceTap = now - lastTapTime;
 
-    // Пассивный слив энергии при бездействии более 450 мс
     if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
       state.energy -= state.drainPerSec * dt;
       if (state.energy < 0) state.energy = 0;
@@ -749,7 +739,6 @@
     requestAnimationFrame(loop);
   }
 
-  // Модальные окна
   profileBtn.addEventListener('click', () => profileModal.classList.add('active'));
   
   profileCloseBtn.addEventListener('click', (e) => {
