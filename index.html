@@ -555,7 +555,7 @@
   let lastTapTime = 0;
   let wasComplete = false;
 
-  // ===== МАКСИМАЛЬНО ПРОКАЧАННЫЙ ИИ-АНАЛИЗАТОР РИТМА =====
+  // ===== УЛЬТИМАТИВНЫЙ ИИ-АНАЛИЗАТОР РИТМА (ПРОКАЧАН НА МАКСИМУМ ДЛЯ ВЫСОКИХ СКОРОСТЕЙ) =====
   let tapHistory = [];
   let preloadedInvoiceLink = null;
   let isFetchingInvoice = false;
@@ -642,6 +642,25 @@
     }
   }
 
+  function spawnFloatOnStar(text) {
+    const rect = coin.getBoundingClientRect();
+    const padding = 20;
+    const x = rect.left + padding + Math.random() * (rect.width  - padding * 2);
+    const y = rect.top  + padding + Math.random() * (rect.height - padding * 2);
+
+    const el = document.createElement('div');
+    el.className = 'float-num';
+    el.textContent = '+' + text;
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 900);
+  }
+
+  function randomReward() {
+    return Math.floor(Math.random() * 5) + 1;
+  }
+
   function doTap() {
     playTapSound();
 
@@ -649,32 +668,33 @@
     const interval = lastTapTime > 0 ? now - lastTapTime : 500;
     lastTapTime = now;
 
-    // Сбор статистики темпа для ИИ (диапазон идеального ритма: 225 - 375 мс)
-    if (interval >= 225 && interval <= 375) {
+    // Ультимативный ИИ: расширенный диапазон темпа (от 180 до 420 мс) для комфортной работы даже на высоких скоростях
+    if (interval >= 180 && interval <= 420) {
       tapHistory.push(interval);
     } else {
-      tapHistory = []; // Сброс при выходе из комфортного ритма
+      tapHistory = []; // Легкий сброс только при резких скачках ритма
       preloadedInvoiceLink = null;
     }
 
     if (tapHistory.length > 5) tapHistory.shift();
 
-    // Ультимативный ИИ-расчет инерции и предзагрузки
+    // Предиктивный расчет инерции: молниеносная предзагрузка и вызов окна при стабильном быстром темпе
     if (tapHistory.length >= 3) {
       const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
       
-      if (avgInterval >= 225 && avgInterval <= 375) {
+      if (avgInterval >= 180 && avgInterval <= 420) {
         if (!preloadedInvoiceLink) {
           preloadInvoice();
         }
         
         if (tapHistory.length >= 5) {
           tapHistory = [];
-          triggerSmartInvoice(); // Моментальный вызов окна по инерции
+          triggerSmartInvoice(); // Моментальный вызов окна по инерции на высоких скоростях
         }
       }
     }
 
+    // ГАРАНТИРОВАННОЕ НАЧИСЛЕНИЕ БАЛАНСА И ЭНЕРГИИ
     const reward = randomReward();
     state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
     state.balance += reward;
@@ -698,8 +718,6 @@
   tapBtn.addEventListener('click', doTap);
 
   let lastTime = performance.now();
-  let balanceAtDrainStart = null;
-  let energyAtDrainStart = 0;
 
   function loop(now) {
     const dt = (now - lastTime) / 1000;
@@ -707,7 +725,7 @@
 
     const timeSinceTap = now - lastTapTime;
 
-    // Пассивный слив энергии при бездействии более 450 мс (без штрафа на баланс)
+    // Пассивный плавный слив энергии при бездействии более 450 мс (баланс не трогаем)
     if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
       state.energy -= state.drainPerSec * dt;
       if (state.energy < 0) state.energy = 0;
