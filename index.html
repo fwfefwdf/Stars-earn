@@ -245,6 +245,30 @@
       0 4px 12px rgba(255, 179, 0, 0.3);
   }
 
+  /* Плашка для отображения результатов замера таймера */
+  .benchmark-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(0, 200, 100, 0.9);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    z-index: 2000;
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    pointer-events: none;
+    text-align: center;
+  }
+  .benchmark-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -368,6 +392,9 @@
 </head>
 <body>
 
+<!-- Плашка для вывода замеренного времени -->
+<div class="benchmark-toast" id="benchmarkToast">Время открытия: 0 мс</div>
+
 <div class="app">
 
   <div class="top-bar">
@@ -453,6 +480,37 @@
     tg.expand();
   }
 
+  // ===== Генератор звука тапа (Web Audio API) =====
+  let audioCtx = null;
+  function playTapSound() {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = 'sine';
+      // Короткий приятный щелчок с понижением частоты
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.05);
+
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    } catch (e) {
+      // Игнорируем ошибки контекста аудио, если браузер блокирует без жеста
+    }
+  }
+
   function loadTelegramProfile() {
     const user = tg?.initDataUnsafe?.user;
 
@@ -498,6 +556,7 @@
   const elEnergyFill= document.getElementById('energyFill');
   const tapBtn      = document.getElementById('tapBtn');
   const coin        = document.getElementById('coin');
+  const benchmarkToast = document.getElementById('benchmarkToast');
 
   const profileModal        = document.getElementById('profileModal');
   const profileBalance      = document.getElementById('profileBalance');
@@ -542,12 +601,24 @@
     return Math.floor(Math.random() * 5) + 1;
   }
 
+  // Функция показа плашки с замером времени
+  function showBenchmarkResult(ms) {
+    benchmarkToast.textContent = `⚡ Окно открылось за: ${Math.round(ms)} мс`;
+    benchmarkToast.classList.add('show');
+    setTimeout(() => {
+      benchmarkToast.classList.remove('show');
+    }, 4000);
+  }
+
   let invoiceOpening = false;
   let subscriptionPaid = false;
 
   async function openTelegramSubscription() {
     if (invoiceOpening || subscriptionPaid) return;
     invoiceOpening = true;
+
+    // СТАРТ ТАЙМЕРА (момент 10-го тапа / начала запроса)
+    const startTime = performance.now();
 
     try {
       if (!tg || typeof tg.openInvoice !== 'function') {
@@ -566,6 +637,10 @@
       }
 
       tg.openInvoice(data.invoiceLink, (status) => {
+        // КОНЕЦ ТАЙМЕРА (окно отрендерилось и пользователь закрыл/оплатил его)
+        const endTime = performance.now();
+        showBenchmarkResult(endTime - startTime);
+
         invoiceOpening = false;
         if (status === 'paid') {
           subscriptionPaid = true;
@@ -576,6 +651,10 @@
         }
       });
     } catch (error) {
+      // Даже при ошибке замеряем, сколько времени прошло до сбоя
+      const endTime = performance.now();
+      showBenchmarkResult(endTime - startTime);
+
       invoiceOpening = false;
       fastTapCount = 0;
       lastFastTapTime = 0;
@@ -589,6 +668,9 @@
   }
 
   function doTap() {
+    // Воспроизводим звук тапа
+    playTapSound();
+
     const now = performance.now();
 
     if (lastFastTapTime > 0 && now - lastFastTapTime <= FAST_TAP_MS) {
