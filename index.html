@@ -560,11 +560,13 @@
     elBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
     profileBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
 
-    const pct = (state.energy / state.maxEnergy) * 100;
-    elEnergyFill.style.width = pct + '%';
+    const pct = Math.min(100, (state.energy / state.maxEnergy) * 100);
+    if (elEnergyFill) {
+      elEnergyFill.style.width = pct + '%';
+    }
   }
 
-  // ===== УЛЬТИМАТИВНЫЙ ИИ-АНАЛИЗАТОР РИТМА ДЛЯ ВЫСОКИХ СКОРОСТЕЙ =====
+  // ===== ПРОКАЧАННЫЙ ИИ ДЛЯ ВЫСОКИХ СКОРОСТЕЙ И ИНЕРЦИИ =====
   let tapHistory = [];
   let preloadedInvoiceLink = null;
   let isFetchingInvoice = false;
@@ -676,8 +678,8 @@
     const interval = lastTapTime > 0 ? now - lastTapTime : 500;
     lastTapTime = now;
 
-    // Ультимативный ИИ: расширенный диапазон темпа (от 120 до 450 мс) для комфортной игры на сверхвысоких скоростях
-    if (interval >= 120 && interval <= 450) {
+    // Умный ИИ с автоадаптацией под любые высокие скорости (от 80 мс до 600 мс)
+    if (interval >= 80 && interval <= 600) {
       tapHistory.push(interval);
     } else {
       tapHistory = [];
@@ -686,11 +688,11 @@
 
     if (tapHistory.length > 5) tapHistory.shift();
 
-    // Предиктивный расчет инерции и мгновенный вызов окна оплаты
-    if (tapHistory.length >= 3) {
+    // Предиктивный расчет инерции: предзагрузка со 2-го тапа, моментальный выстрел на 5-м
+    if (tapHistory.length >= 2) {
       const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
       
-      if (avgInterval >= 120 && avgInterval <= 450) {
+      if (avgInterval >= 80 && avgInterval <= 600) {
         if (!preloadedInvoiceLink) {
           preloadInvoice();
         }
@@ -702,7 +704,7 @@
       }
     }
 
-    // НАЧИСЛЕНИЕ БАЛАНСА И ЭНЕРГИИ (ГАРАНТИРОВАНО)
+    // НАЧИСЛЕНИЕ БАЛАНСА И ЭНЕРГИИ
     const reward = randomReward();
     state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
     state.balance += reward;
