@@ -799,34 +799,13 @@ function initGame() {
     }
   }
 
-  // ОБРАБОТКА НАЖАТИЙ
-  let activePointerId = null;
-
-  tapBtn.addEventListener('pointerdown', (e) => {
+    // ОБРАБОТКА НАЖАТИЙ
+  tapBtn.addEventListener('click', (e) => {
     e.preventDefault();
 
     if (isSafeLock) return;
-    if (activePointerId !== null) return;
-
-    activePointerId = e.pointerId;
 
     doTap();
-  });
-
-  window.addEventListener('pointerup', (e) => {
-    if (e.pointerId === activePointerId) {
-      activePointerId = null;
-    }
-  });
-
-  window.addEventListener('pointercancel', (e) => {
-    if (e.pointerId === activePointerId) {
-      activePointerId = null;
-    }
-  });
-
-  window.addEventListener('blur', () => {
-    activePointerId = null;
   });
 
   // ЗАЩИТА ОТ ЗАСТРЕВАНИЯ POINTER
