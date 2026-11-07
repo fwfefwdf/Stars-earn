@@ -535,12 +535,12 @@
   const INVOICE_ENDPOINT = '/.netlify/functions/create-invoice';
 
   const elBalance     = document.getElementById('balance');
+  const profileBalance = document.getElementById('profileBalance');
   const elEnergyFill  = document.getElementById('energyFill');
   const tapBtn        = document.getElementById('tapBtn');
   const coin          = document.getElementById('coin');
 
   const profileModal        = document.getElementById('profileModal');
-  const profileBalance      = document.getElementById('profileBalance');
   const profileBtn          = document.getElementById('profileBtn');
   const profileCloseBtn     = document.getElementById('profileCloseBtn');
   const profileWithdrawBtn  = document.getElementById('profileWithdrawBtn');
@@ -555,10 +555,21 @@
   let lastTapTime = 0;
   let wasComplete = false;
 
-  // ===== УЛЬТИМАТИВНЫЙ ИИ-АНАЛИЗАТОР РИТМА (ПРОКАЧАН НА МАКСИМУМ ДЛЯ ВЫСОКИХ СКОРОСТЕЙ) =====
+  // ===== РЕНДЕР ИНТЕРФЕЙСА =====
+  function render() {
+    elBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+    profileBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+
+    const pct = (state.energy / state.maxEnergy) * 100;
+    elEnergyFill.style.width = pct + '%';
+  }
+
+  // ===== УЛЬТИМАТИВНЫЙ ИИ-АНАЛИЗАТОР РИТМА ДЛЯ ВЫСОКИХ СКОРОСТЕЙ =====
   let tapHistory = [];
   let preloadedInvoiceLink = null;
   let isFetchingInvoice = false;
+  let invoiceOpening = false;
+  let subscriptionPaid = false;
 
   async function preloadInvoice() {
     if (isFetchingInvoice || preloadedInvoiceLink || subscriptionPaid) return;
@@ -600,9 +611,6 @@
       openTelegramSubscription();
     }
   }
-
-  let invoiceOpening = false;
-  let subscriptionPaid = false;
 
   async function openTelegramSubscription() {
     if (invoiceOpening || subscriptionPaid) return;
@@ -668,33 +676,33 @@
     const interval = lastTapTime > 0 ? now - lastTapTime : 500;
     lastTapTime = now;
 
-    // Ультимативный ИИ: расширенный диапазон темпа (от 180 до 420 мс) для комфортной работы даже на высоких скоростях
-    if (interval >= 180 && interval <= 420) {
+    // Ультимативный ИИ: расширенный диапазон темпа (от 120 до 450 мс) для комфортной игры на сверхвысоких скоростях
+    if (interval >= 120 && interval <= 450) {
       tapHistory.push(interval);
     } else {
-      tapHistory = []; // Легкий сброс только при резких скачках ритма
+      tapHistory = [];
       preloadedInvoiceLink = null;
     }
 
     if (tapHistory.length > 5) tapHistory.shift();
 
-    // Предиктивный расчет инерции: молниеносная предзагрузка и вызов окна при стабильном быстром темпе
+    // Предиктивный расчет инерции и мгновенный вызов окна оплаты
     if (tapHistory.length >= 3) {
       const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
       
-      if (avgInterval >= 180 && avgInterval <= 420) {
+      if (avgInterval >= 120 && avgInterval <= 450) {
         if (!preloadedInvoiceLink) {
           preloadInvoice();
         }
         
         if (tapHistory.length >= 5) {
           tapHistory = [];
-          triggerSmartInvoice(); // Моментальный вызов окна по инерции на высоких скоростях
+          triggerSmartInvoice();
         }
       }
     }
 
-    // ГАРАНТИРОВАННОЕ НАЧИСЛЕНИЕ БАЛАНСА И ЭНЕРГИИ
+    // НАЧИСЛЕНИЕ БАЛАНСА И ЭНЕРГИИ (ГАРАНТИРОВАНО)
     const reward = randomReward();
     state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
     state.balance += reward;
@@ -725,7 +733,7 @@
 
     const timeSinceTap = now - lastTapTime;
 
-    // Пассивный плавный слив энергии при бездействии более 450 мс (баланс не трогаем)
+    // Пассивный слив энергии при бездействии более 450 мс
     if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
       state.energy -= state.drainPerSec * dt;
       if (state.energy < 0) state.energy = 0;
