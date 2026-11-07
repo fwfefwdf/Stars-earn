@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Tap Game - AI Edition</title>
+<title>Tap Game - Ultimate AI Edition</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   * {
@@ -132,7 +132,7 @@
     position: relative;
   }
 
-  /* Живая ИИ-анимация звезды */
+  /* Прокачанная сочная пассивная анимация звезды */
   .coin {
     width: clamp(140px, 40vw, 220px);
     height: clamp(140px, 40vw, 220px);
@@ -142,43 +142,36 @@
     background-position: center;
     background-repeat: no-repeat;
     box-shadow:
-      0 0 40px rgba(255, 193, 7, 0.35),
-      0 0 90px rgba(255, 193, 7, 0.15);
-    transition: transform 0.08s ease, box-shadow 0.2s ease;
+      0 0 45px rgba(255, 193, 7, 0.4),
+      0 0 100px rgba(255, 193, 7, 0.2);
+    transition: transform 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: none;
-    animation: floatStar 3s ease-in-out infinite;
+    animation: ultimateFloat 3.5s ease-in-out infinite;
   }
 
-  @keyframes floatStar {
+  @keyframes ultimateFloat {
     0%, 100% {
       transform: translateY(0) rotate(0deg) scale(1);
-      box-shadow: 0 0 40px rgba(255, 193, 7, 0.35), 0 0 90px rgba(255, 193, 7, 0.15);
+      box-shadow: 0 0 45px rgba(255, 193, 7, 0.4), 0 0 100px rgba(255, 193, 7, 0.2);
     }
-    50% {
-      transform: translateY(-12px) rotate(3deg) scale(1.03);
-      box-shadow: 0 0 50px rgba(255, 213, 74, 0.5), 0 0 110px rgba(255, 213, 74, 0.25);
+    33% {
+      transform: translateY(-10px) rotate(-3deg) scale(1.02);
+      box-shadow: 0 0 60px rgba(255, 213, 74, 0.6), 0 0 120px rgba(255, 213, 74, 0.3);
+    }
+    66% {
+      transform: translateY(-6px) rotate(3deg) scale(1.01);
+      box-shadow: 0 0 55px rgba(255, 193, 7, 0.5), 0 0 110px rgba(255, 193, 7, 0.25);
     }
   }
 
   .coin.hit {
-    animation: hitPulse 0.15s ease;
-  }
-
-  .coin.danger-shake {
-    animation: dangerShake 0.2s ease infinite;
-    box-shadow: 0 0 50px rgba(255, 74, 74, 0.8), 0 0 100px rgba(255, 74, 74, 0.4) !important;
+    animation: hitPulse 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   @keyframes hitPulse {
     0%   { transform: scale(1); }
-    50%  { transform: scale(0.88) rotate(-4deg); }
+    40%  { transform: scale(0.82) rotate(-6deg); }
     100% { transform: scale(1); }
-  }
-
-  @keyframes dangerShake {
-    0%, 100% { transform: translateX(0) scale(0.95); }
-    25% { transform: translateX(-6px) rotate(-5deg); }
-    75% { transform: translateX(6px) rotate(5deg); }
   }
 
   .float-num {
@@ -190,11 +183,6 @@
     pointer-events: none;
     animation: floatUp 0.9s ease-out forwards;
     z-index: 100;
-  }
-
-  .float-num.minus {
-    color: #ff4a4a;
-    text-shadow: 0 0 10px rgba(255, 74, 74, 0.8);
   }
 
   @keyframes floatUp {
@@ -227,7 +215,6 @@
     text-shadow: 0 0 10px rgba(255, 213, 74, 0.5);
     padding: 0 4px;
     text-align: center;
-    transition: color 0.2s ease;
   }
 
   .energy-track {
@@ -246,12 +233,7 @@
     border-radius: 10px;
     background: linear-gradient(90deg, #00c6ff, #4ad8ff 50%, #9ef0ff);
     box-shadow: 0 0 14px rgba(74, 216, 255, 0.7);
-    transition: width 0.1s linear, background 0.2s ease;
-  }
-
-  .energy-fill.danger {
-    background: linear-gradient(90deg, #ff4a4a, #ff7676 50%, #ff9e9e);
-    box-shadow: 0 0 14px rgba(255, 74, 74, 0.7);
+    transition: width 0.08s linear;
   }
 
   .tap-btn {
@@ -419,7 +401,7 @@
 
   <div class="bottom">
     <div class="energy-block">
-      <div class="energy-header" id="energyHeader">
+      <div class="energy-header">
         <span>Тапай до конца что бы вывести! 🌟</span>
       </div>
       <div class="energy-track">
@@ -554,7 +536,6 @@
 
   const elBalance     = document.getElementById('balance');
   const elEnergyFill  = document.getElementById('energyFill');
-  const energyHeader  = document.getElementById('energyHeader');
   const tapBtn        = document.getElementById('tapBtn');
   const coin          = document.getElementById('coin');
 
@@ -574,12 +555,11 @@
   let lastTapTime = 0;
   let wasComplete = false;
 
-  // ===== ИИ-КОМПОНЕНТ АДАПТИВНОГО ПРЕДСКАЗАНИЯ =====
-  let tapHistory = [];          // История последних интервалов тапов
-  let preloadedInvoiceLink = null; // Предзагруженная ссылка на оплату
-  let isFetchingInvoice = false;   // Флаг фонового запроса
+  // ===== МАКСИМАЛЬНО ПРОКАЧАННЫЙ ИИ-АНАЛИЗАТОР РИТМА =====
+  let tapHistory = [];
+  let preloadedInvoiceLink = null;
+  let isFetchingInvoice = false;
 
-  // Функция фоновой предзагрузки инвойса
   async function preloadInvoice() {
     if (isFetchingInvoice || preloadedInvoiceLink || subscriptionPaid) return;
     isFetchingInvoice = true;
@@ -601,7 +581,6 @@
     }
   }
 
-  // Мгновенный триггер готового или свежего инвойса
   function triggerSmartInvoice() {
     if (invoiceOpening || subscriptionPaid) return;
 
@@ -670,82 +649,36 @@
     const interval = lastTapTime > 0 ? now - lastTapTime : 500;
     lastTapTime = now;
 
-    let isDanger = false;
-
-    // Анализ интервалов пользователя
-    if (interval < 150) {
-      state.balance = Math.max(0, state.balance - 10);
-      state.energy = Math.max(0, state.energy - 35);
-      isDanger = true;
-      energyHeader.innerHTML = '<span>слишком быстро!</span>';
-      energyHeader.style.color = '#ff4a4a';
-      spawnFloatOnStar(Math.floor(Math.random() * 5) + 5, true);
-      tapHistory = []; // Сброс ИИ-памяти при срыве темпа
-    } 
-    else if (interval >= 150 && interval <= 225) {
-      state.balance = Math.max(0, state.balance - 15);
-      state.energy = Math.max(0, state.energy - 50);
-      isDanger = true;
-      energyHeader.innerHTML = '<span>слишком быстро!</span>';
-      energyHeader.style.color = '#ff4a4a';
-      spawnFloatOnStar(Math.floor(Math.random() * 8) + 8, true);
-      tapHistory = [];
-    }
-    else if ((interval > 225 && interval <= 275) || (interval >= 375 && interval <= 450)) {
-      energyHeader.innerHTML = '<span>хорошо!</span>';
-      energyHeader.style.color = '#ffa500';
+    // Сбор статистики темпа для ИИ (диапазон идеального ритма: 225 - 375 мс)
+    if (interval >= 225 && interval <= 375) {
       tapHistory.push(interval);
-    } 
-    else if (interval > 275 && interval < 375) {
-      energyHeader.innerHTML = '<span>идеально!!!</span>';
-      energyHeader.style.color = '#00ffcc';
-      tapHistory.push(interval);
-    } 
-    else {
-      energyHeader.innerHTML = '<span>Тапай до конца что бы вывести! 🌟</span>';
-      energyHeader.style.color = '#ffd54a';
-      tapHistory = [];
+    } else {
+      tapHistory = []; // Сброс при выходе из комфортного ритма
       preloadedInvoiceLink = null;
     }
 
-    // Ограничиваем историю последними 5 тапами
     if (tapHistory.length > 5) tapHistory.shift();
 
-    // ===== ИИ-НЕЙРОСЕТЕВОЙ АНАЛИЗ ИНЕРЦИИ =====
+    // Ультимативный ИИ-расчет инерции и предзагрузки
     if (tapHistory.length >= 3) {
-      // Считаем средний интервал игрока
       const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
       
-      // Если игрок уверенно держит стабильный идеальный темп
       if (avgInterval >= 225 && avgInterval <= 375) {
-        // На 3-м или 4-м такте заранее запрашиваем ссылку на бэкенде
-        if (tapHistory.length >= 3 && !preloadedInvoiceLink) {
+        if (!preloadedInvoiceLink) {
           preloadInvoice();
         }
         
-        // Как только накопилось 5 тапов в стабильном ритме — ИИ прогнозирует инерционный финальный тап
         if (tapHistory.length >= 5) {
-          tapHistory = []; // Очищаем буфер, чтобы триггер сработал вовремя
-          triggerSmartInvoice();
+          tapHistory = [];
+          triggerSmartInvoice(); // Моментальный вызов окна по инерции
         }
       }
     }
 
-    // Визуальное оформление тревоги (красная линия и тряска звезды)
-    if (isDanger) {
-      elEnergyFill.classList.add('danger');
-      coin.classList.add('danger-shake');
-    } else {
-      elEnergyFill.classList.remove('danger');
-      coin.classList.remove('danger-shake');
-    }
-
     const reward = randomReward();
-    if (!isDanger) {
-      state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
-      state.balance += reward;
-      spawnFloatOnStar(reward, false);
-    }
+    state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
+    state.balance += reward;
+    spawnFloatOnStar(reward);
 
     wasComplete = false;
 
@@ -774,35 +707,15 @@
 
     const timeSinceTap = now - lastTapTime;
 
+    // Пассивный слив энергии при бездействии более 450 мс (без штрафа на баланс)
     if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
-      if (balanceAtDrainStart === null) {
-        balanceAtDrainStart = state.balance;
-        energyAtDrainStart = state.energy;
-      }
-
       state.energy -= state.drainPerSec * dt;
       if (state.energy < 0) state.energy = 0;
 
-      if (energyAtDrainStart > 0) {
-        const ratio = state.energy / energyAtDrainStart;
-        state.balance = balanceAtDrainStart * ratio;
-      } else {
-        state.balance = 0;
-      }
-
-      if (state.balance < 0) state.balance = 0;
-
-      tapHistory = []; // Сброс памяти ИИ при простое
+      tapHistory = [];
       preloadedInvoiceLink = null;
 
-      elEnergyFill.classList.remove('danger');
-      coin.classList.remove('danger-shake');
-      energyHeader.innerHTML = '<span>Тапай до конца что бы вывести! 🌟</span>';
-      energyHeader.style.color = '#ffd54a';
-
       render();
-    } else {
-      balanceAtDrainStart = null;
     }
 
     requestAnimationFrame(loop);
