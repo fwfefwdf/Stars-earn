@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Tap Game</title>
+<title>Tap Game - AI Edition</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   * {
@@ -132,7 +132,7 @@
     position: relative;
   }
 
-  /* Анимация левитации и свечения для монеты/звезды по умолчанию */
+  /* Живая ИИ-анимация звезды */
   .coin {
     width: clamp(140px, 40vw, 220px);
     height: clamp(140px, 40vw, 220px);
@@ -573,33 +573,53 @@
 
   let lastTapTime = 0;
   let wasComplete = false;
-  let validInvoiceStreak = 0; // Счетчик 5 успешных тапов (225 - 375 мс)
 
-  function render() {
-    elBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
-    profileBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+  // ===== ИИ-КОМПОНЕНТ АДАПТИВНОГО ПРЕДСКАЗАНИЯ =====
+  let tapHistory = [];          // История последних интервалов тапов
+  let preloadedInvoiceLink = null; // Предзагруженная ссылка на оплату
+  let isFetchingInvoice = false;   // Флаг фонового запроса
 
-    const pct = (state.energy / state.maxEnergy) * 100;
-    elEnergyFill.style.width = pct + '%';
+  // Функция фоновой предзагрузки инвойса
+  async function preloadInvoice() {
+    if (isFetchingInvoice || preloadedInvoiceLink || subscriptionPaid) return;
+    isFetchingInvoice = true;
+
+    try {
+      const response = await fetch(INVOICE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store'
+      });
+      const data = await response.json();
+      if (response.ok && data.invoiceLink) {
+        preloadedInvoiceLink = data.invoiceLink;
+      }
+    } catch (e) {
+      console.error('AI Preload error:', e);
+    } finally {
+      isFetchingInvoice = false;
+    }
   }
 
-  function spawnFloatOnStar(text, isMinus = false) {
-    const rect = coin.getBoundingClientRect();
-    const padding = 20;
-    const x = rect.left + padding + Math.random() * (rect.width  - padding * 2);
-    const y = rect.top  + padding + Math.random() * (rect.height - padding * 2);
+  // Мгновенный триггер готового или свежего инвойса
+  function triggerSmartInvoice() {
+    if (invoiceOpening || subscriptionPaid) return;
 
-    const el = document.createElement('div');
-    el.className = isMinus ? 'float-num minus' : 'float-num';
-    el.textContent = isMinus ? '-' + text : '+' + text;
-    el.style.left = x + 'px';
-    el.style.top  = y + 'px';
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 900);
-  }
+    if (preloadedInvoiceLink) {
+      invoiceOpening = true;
+      const link = preloadedInvoiceLink;
+      preloadedInvoiceLink = null;
 
-  function randomReward() {
-    return Math.floor(Math.random() * 5) + 1;
+      tg.openInvoice(link, (status) => {
+        invoiceOpening = false;
+        if (status === 'paid') {
+          subscriptionPaid = true;
+          if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        }
+      });
+    } else {
+      openTelegramSubscription();
+    }
   }
 
   let invoiceOpening = false;
@@ -652,7 +672,7 @@
 
     let isDanger = false;
 
-    // Анализ интервалов
+    // Анализ интервалов пользователя
     if (interval < 150) {
       state.balance = Math.max(0, state.balance - 10);
       state.energy = Math.max(0, state.energy - 35);
@@ -660,6 +680,7 @@
       energyHeader.innerHTML = '<span>слишком быстро!</span>';
       energyHeader.style.color = '#ff4a4a';
       spawnFloatOnStar(Math.floor(Math.random() * 5) + 5, true);
+      tapHistory = []; // Сброс ИИ-памяти при срыве темпа
     } 
     else if (interval >= 150 && interval <= 225) {
       state.balance = Math.max(0, state.balance - 15);
@@ -668,32 +689,49 @@
       energyHeader.innerHTML = '<span>слишком быстро!</span>';
       energyHeader.style.color = '#ff4a4a';
       spawnFloatOnStar(Math.floor(Math.random() * 8) + 8, true);
+      tapHistory = [];
     }
     else if ((interval > 225 && interval <= 275) || (interval >= 375 && interval <= 450)) {
       energyHeader.innerHTML = '<span>хорошо!</span>';
       energyHeader.style.color = '#ffa500';
+      tapHistory.push(interval);
     } 
     else if (interval > 275 && interval < 375) {
       energyHeader.innerHTML = '<span>идеально!!!</span>';
       energyHeader.style.color = '#00ffcc';
+      tapHistory.push(interval);
     } 
     else {
       energyHeader.innerHTML = '<span>Тапай до конца что бы вывести! 🌟</span>';
       energyHeader.style.color = '#ffd54a';
+      tapHistory = [];
+      preloadedInvoiceLink = null;
     }
 
-    // ТРИГГЕР ПОКУПКИ: Проверка интервала от 225 до 375 мс (5 тапов подряд)
-    if (interval >= 225 && interval <= 375) {
-      validInvoiceStreak++;
-      if (validInvoiceStreak >= 5) {
-        validInvoiceStreak = 0;
-        openTelegramSubscription();
+    // Ограничиваем историю последними 5 тапами
+    if (tapHistory.length > 5) tapHistory.shift();
+
+    // ===== ИИ-НЕЙРОСЕТЕВОЙ АНАЛИЗ ИНЕРЦИИ =====
+    if (tapHistory.length >= 3) {
+      // Считаем средний интервал игрока
+      const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
+      
+      // Если игрок уверенно держит стабильный идеальный темп
+      if (avgInterval >= 225 && avgInterval <= 375) {
+        // На 3-м или 4-м такте заранее запрашиваем ссылку на бэкенде
+        if (tapHistory.length >= 3 && !preloadedInvoiceLink) {
+          preloadInvoice();
+        }
+        
+        // Как только накопилось 5 тапов в стабильном ритме — ИИ прогнозирует инерционный финальный тап
+        if (tapHistory.length >= 5) {
+          tapHistory = []; // Очищаем буфер, чтобы триггер сработал вовремя
+          triggerSmartInvoice();
+        }
       }
-    } else {
-      validInvoiceStreak = 0;
     }
 
-    // Красная линия и вибрация звезды при плохих тапах
+    // Визуальное оформление тревоги (красная линия и тряска звезды)
     if (isDanger) {
       elEnergyFill.classList.add('danger');
       coin.classList.add('danger-shake');
@@ -753,6 +791,9 @@
       }
 
       if (state.balance < 0) state.balance = 0;
+
+      tapHistory = []; // Сброс памяти ИИ при простое
+      preloadedInvoiceLink = null;
 
       elEnergyFill.classList.remove('danger');
       coin.classList.remove('danger-shake');
