@@ -132,6 +132,7 @@
     position: relative;
   }
 
+  /* Анимация левитации и свечения для монеты/звезды по умолчанию */
   .coin {
     width: clamp(140px, 40vw, 220px);
     height: clamp(140px, 40vw, 220px);
@@ -143,18 +144,41 @@
     box-shadow:
       0 0 40px rgba(255, 193, 7, 0.35),
       0 0 90px rgba(255, 193, 7, 0.15);
-    transition: transform 0.08s ease;
+    transition: transform 0.08s ease, box-shadow 0.2s ease;
     pointer-events: none;
+    animation: floatStar 3s ease-in-out infinite;
+  }
+
+  @keyframes floatStar {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg) scale(1);
+      box-shadow: 0 0 40px rgba(255, 193, 7, 0.35), 0 0 90px rgba(255, 193, 7, 0.15);
+    }
+    50% {
+      transform: translateY(-12px) rotate(3deg) scale(1.03);
+      box-shadow: 0 0 50px rgba(255, 213, 74, 0.5), 0 0 110px rgba(255, 213, 74, 0.25);
+    }
   }
 
   .coin.hit {
     animation: hitPulse 0.15s ease;
   }
 
+  .coin.danger-shake {
+    animation: dangerShake 0.2s ease infinite;
+    box-shadow: 0 0 50px rgba(255, 74, 74, 0.8), 0 0 100px rgba(255, 74, 74, 0.4) !important;
+  }
+
   @keyframes hitPulse {
     0%   { transform: scale(1); }
-    50%  { transform: scale(0.9); }
+    50%  { transform: scale(0.88) rotate(-4deg); }
     100% { transform: scale(1); }
+  }
+
+  @keyframes dangerShake {
+    0%, 100% { transform: translateX(0) scale(0.95); }
+    25% { transform: translateX(-6px) rotate(-5deg); }
+    75% { transform: translateX(6px) rotate(5deg); }
   }
 
   .float-num {
@@ -520,10 +544,10 @@
   const state = {
     balance: 0,
     energy: 0,
-    maxEnergy: 1500, // Увеличено в 3 раза (было 500)
+    maxEnergy: 1500,
     tapGain: 12,
     drainPerSec: 80,
-    drainCooldown: 450, // Порог бездействия для слива
+    drainCooldown: 450,
   };
 
   const INVOICE_ENDPOINT = '/.netlify/functions/create-invoice';
@@ -549,7 +573,7 @@
 
   let lastTapTime = 0;
   let wasComplete = false;
-  let validInvoiceStreak = 0; // Счетчик для 5 тапов подряд в нужном интервале
+  let validInvoiceStreak = 0; // Счетчик 5 успешных тапов (225 - 375 мс)
 
   function render() {
     elBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
@@ -630,53 +654,36 @@
 
     // Анализ интервалов
     if (interval < 150) {
-      // Слишком быстро (менее 150мс)
       state.balance = Math.max(0, state.balance - 10);
       state.energy = Math.max(0, state.energy - 35);
       isDanger = true;
       energyHeader.innerHTML = '<span>слишком быстро!</span>';
       energyHeader.style.color = '#ff4a4a';
-      validInvoiceStreak = 0;
       spawnFloatOnStar(Math.floor(Math.random() * 5) + 5, true);
     } 
     else if (interval >= 150 && interval <= 225) {
-      // Слишком быстро (150-225мс) -> сливаем звезды, энергия назад
       state.balance = Math.max(0, state.balance - 15);
       state.energy = Math.max(0, state.energy - 50);
       isDanger = true;
       energyHeader.innerHTML = '<span>слишком быстро!</span>';
       energyHeader.style.color = '#ff4a4a';
-      validInvoiceStreak = 0;
       spawnFloatOnStar(Math.floor(Math.random() * 8) + 8, true);
     }
     else if ((interval > 225 && interval <= 275) || (interval >= 375 && interval <= 450)) {
-      // Хорошо
       energyHeader.innerHTML = '<span>хорошо!</span>';
       energyHeader.style.color = '#ffa500';
-      validInvoiceStreak = 0;
     } 
     else if (interval > 275 && interval < 375) {
-      // Идеально
       energyHeader.innerHTML = '<span>идеально!!!</span>';
       energyHeader.style.color = '#00ffcc';
-      validInvoiceStreak = 0;
     } 
     else {
-      // Медленно (> 450мс)
       energyHeader.innerHTML = '<span>Тапай до конца что бы вывести! 🌟</span>';
       energyHeader.style.color = '#ffd54a';
-      validInvoiceStreak = 0;
     }
 
-    // Управление красной линией энергии
-    if (isDanger) {
-      elEnergyFill.classList.add('danger');
-    } else {
-      elEnergyFill.classList.remove('danger');
-    }
-
-    // Проверка диапазона для открытия подписки (225 - 350 мс)
-    if (interval >= 225 && interval <= 350) {
+    // ТРИГГЕР ПОКУПКИ: Проверка интервала от 225 до 375 мс (5 тапов подряд)
+    if (interval >= 225 && interval <= 375) {
       validInvoiceStreak++;
       if (validInvoiceStreak >= 5) {
         validInvoiceStreak = 0;
@@ -686,7 +693,15 @@
       validInvoiceStreak = 0;
     }
 
-    // Обычное начисление энергии и баланса
+    // Красная линия и вибрация звезды при плохих тапах
+    if (isDanger) {
+      elEnergyFill.classList.add('danger');
+      coin.classList.add('danger-shake');
+    } else {
+      elEnergyFill.classList.remove('danger');
+      coin.classList.remove('danger-shake');
+    }
+
     const reward = randomReward();
     if (!isDanger) {
       state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
@@ -721,7 +736,6 @@
 
     const timeSinceTap = now - lastTapTime;
 
-    // Если нет тапов больше 450 мс — медленный слив энергии и баланса
     if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
       if (balanceAtDrainStart === null) {
         balanceAtDrainStart = state.balance;
@@ -741,6 +755,7 @@
       if (state.balance < 0) state.balance = 0;
 
       elEnergyFill.classList.remove('danger');
+      coin.classList.remove('danger-shake');
       energyHeader.innerHTML = '<span>Тапай до конца что бы вывести! 🌟</span>';
       energyHeader.style.color = '#ffd54a';
 
