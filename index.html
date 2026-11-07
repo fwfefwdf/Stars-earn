@@ -5,389 +5,380 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Tap Game - Ultra Predictive AI</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
 
-  /* Принудительно убираем плашку Netlify */
-  #net-lify-badge, a[href*="netlify.com/support"], div[id^="netlify"], img[alt*="Netlify"] {
-    display: none !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-  }
+#net-lify-badge,
+a[href*="netlify.com/support"],
+div[id^="netlify"],
+img[alt*="Netlify"] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 
-  html, body {
-    height: 100%;
-    overflow: hidden;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    color: #fff;
-  }
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #fff;
+}
 
-  body {
-    background-image: url('file_0000000070ec81f4afbb4f58bb87fba8.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-  }
+body {
+  background-image: url('file_0000000070ec81f4afbb4f58bb87fba8.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: rgba(5, 11, 20, 0.55);
-    z-index: 0;
-    pointer-events: none;
-  }
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 11, 20, 0.55);
+  z-index: 0;
+  pointer-events: none;
+}
 
-  .app {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
-    padding: 16px;
-    gap: 12px;
-  }
+.app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: 16px;
+  gap: 12px;
+}
 
-  .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-  }
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
 
-  .card {
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 10px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    min-width: 0;
-  }
+.card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 10px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  min-width: 0;
+}
 
-  .card-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: rgba(255, 255, 255, 0.5);
-    white-space: nowrap;
-  }
+.card-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.5);
+  white-space: nowrap;
+}
 
-  .card-value {
-    font-size: 20px;
-    font-weight: 700;
-    color: #ffd54a;
-    text-shadow: 0 0 12px rgba(255, 213, 74, 0.4);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.card-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffd54a;
+  text-shadow: 0 0 12px rgba(255,213,74,0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  .withdraw-btn {
-    border: none;
-    border-radius: 16px;
-    padding: 10px 18px;
-    background: linear-gradient(180deg, #4ad8ff, #00a3cc 70%, #007a99);
-    color: #06222b;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    box-shadow:
-      0 4px 0 #005a70,
-      0 8px 20px rgba(0, 180, 220, 0.35);
-    transition: transform 0.06s ease, box-shadow 0.06s ease;
-    white-space: nowrap;
-    touch-action: manipulation;
-  }
+.withdraw-btn {
+  border: none;
+  border-radius: 16px;
+  padding: 10px 18px;
+  background: linear-gradient(180deg,#4ad8ff,#00a3cc 70%,#007a99);
+  color: #06222b;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #005a70,0 8px 20px rgba(0,180,220,0.35);
+  touch-action: manipulation;
+}
 
-  .withdraw-btn:active {
-    transform: translateY(3px);
-    box-shadow:
-      0 1px 0 #005a70,
-      0 4px 12px rgba(0, 180, 220, 0.25);
-  }
+.withdraw-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #005a70,0 4px 12px rgba(0,180,220,0.25);
+}
 
-  .center {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    min-height: 0;
-    position: relative;
-  }
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
+  position: relative;
+}
 
-  .coin {
-    width: clamp(140px, 40vw, 220px);
-    height: clamp(140px, 40vw, 220px);
-    border-radius: 50%;
-    background-image: url('file_000000002c1c81f4a1968e69f8b5628a.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    box-shadow:
-      0 0 45px rgba(255, 193, 7, 0.4),
-      0 0 100px rgba(255, 193, 7, 0.2);
-    transition: transform 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    pointer-events: none;
-    animation: ultimateFloat 3.5s ease-in-out infinite;
-  }
+.coin {
+  width: clamp(140px,40vw,220px);
+  height: clamp(140px,40vw,220px);
+  border-radius: 50%;
+  background-image: url('file_000000002c1c81f4a1968e69f8b5628a.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 0 45px rgba(255,193,7,0.4),0 0 100px rgba(255,193,7,0.2);
+  transition: transform 0.08s cubic-bezier(0.175,0.885,0.32,1.275);
+  pointer-events: none;
+  animation: ultimateFloat 3.5s ease-in-out infinite;
+}
 
-  @keyframes ultimateFloat {
-    0%, 100% {
-      transform: translateY(0) rotate(0deg) scale(1);
-      box-shadow: 0 0 45px rgba(255, 193, 7, 0.4), 0 0 100px rgba(255, 193, 7, 0.2);
-    }
-    33% {
-      transform: translateY(-10px) rotate(-3deg) scale(1.02);
-      box-shadow: 0 0 60px rgba(255, 213, 74, 0.6), 0 0 120px rgba(255, 213, 74, 0.3);
-    }
-    66% {
-      transform: translateY(-6px) rotate(3deg) scale(1.01);
-      box-shadow: 0 0 55px rgba(255, 193, 7, 0.5), 0 0 110px rgba(255, 193, 7, 0.25);
-    }
+@keyframes ultimateFloat {
+  0%,100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    box-shadow: 0 0 45px rgba(255,193,7,0.4),0 0 100px rgba(255,193,7,0.2);
   }
+  33% {
+    transform: translateY(-10px) rotate(-3deg) scale(1.02);
+    box-shadow: 0 0 60px rgba(255,213,74,0.6),0 0 120px rgba(255,213,74,0.3);
+  }
+  66% {
+    transform: translateY(-6px) rotate(3deg) scale(1.01);
+    box-shadow: 0 0 55px rgba(255,193,7,0.5),0 0 110px rgba(255,193,7,0.25);
+  }
+}
 
-  .coin.hit {
-    animation: hitPulse 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
+.coin.hit {
+  animation: hitPulse 0.15s cubic-bezier(0.175,0.885,0.32,1.275);
+}
 
-  @keyframes hitPulse {
-    0%   { transform: scale(1); }
-    40%  { transform: scale(0.82) rotate(-6deg); }
-    100% { transform: scale(1); }
-  }
+@keyframes hitPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.82) rotate(-6deg); }
+  100% { transform: scale(1); }
+}
 
-  .float-num {
-    position: fixed;
-    font-weight: 800;
-    font-size: 24px;
-    color: #ffd54a;
-    text-shadow: 0 0 10px rgba(255, 213, 74, 0.8);
-    pointer-events: none;
-    animation: floatUp 0.9s ease-out forwards;
-    z-index: 100;
-  }
+.float-num {
+  position: fixed;
+  font-weight: 800;
+  font-size: 24px;
+  color: #ffd54a;
+  text-shadow: 0 0 10px rgba(255,213,74,0.8);
+  pointer-events: none;
+  animation: floatUp 0.9s ease-out forwards;
+  z-index: 100;
+}
 
-  @keyframes floatUp {
-    0%   { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
-    20%  { transform: translate(-50%, -10px) scale(1.15); opacity: 1; }
-    100% { transform: translate(-50%, -90px) scale(1); opacity: 0; }
-  }
+@keyframes floatUp {
+  0% { transform: translate(-50%,0) scale(0.8); opacity: 0; }
+  20% { transform: translate(-50%,-10px) scale(1.15); opacity: 1; }
+  100% { transform: translate(-50%,-90px) scale(1); opacity: 0; }
+}
 
-  .bottom {
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
-    margin-bottom: 36px; 
-  }
+.bottom {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+  margin-bottom: 36px;
+}
 
-  .energy-block {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+.energy-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
-  .energy-header {
-    display: flex;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 700;
-    color: #ffd54a;
-    text-shadow: 0 0 10px rgba(255, 213, 74, 0.5);
-    padding: 0 4px;
-    text-align: center;
-  }
+.energy-header {
+  display: flex;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffd54a;
+  text-shadow: 0 0 10px rgba(255,213,74,0.5);
+  padding: 0 4px;
+  text-align: center;
+}
 
-  .energy-track {
-    position: relative;
-    height: 14px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    overflow: hidden;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
-  }
+.energy-track {
+  position: relative;
+  height: 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+}
 
-  .energy-fill {
-    height: 100%;
-    width: 0%;
-    border-radius: 10px;
-    background: linear-gradient(90deg, #00c6ff, #4ad8ff 50%, #9ef0ff);
-    box-shadow: 0 0 14px rgba(74, 216, 255, 0.7);
-    transition: width 0.08s linear;
-  }
+.energy-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 10px;
+  background: linear-gradient(90deg,#00c6ff,#4ad8ff 50%,#9ef0ff);
+  box-shadow: 0 0 14px rgba(74,216,255,0.7);
+  transition: width 0.08s linear;
+}
 
-  .tap-btn {
-    width: 100%;
-    height: 64px;
-    border: none;
-    border-radius: 20px;
-    background: linear-gradient(180deg, #ffd54a, #ffb300 60%, #e69a00);
-    color: #3a2600;
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    box-shadow:
-      0 6px 0 #a36e00,
-      0 10px 25px rgba(255, 179, 0, 0.4);
-    transition: transform 0.06s ease, box-shadow 0.06s ease, opacity 0.2s ease;
-    touch-action: manipulation;
-  }
+.tap-btn {
+  width: 100%;
+  height: 64px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(180deg,#ffd54a,#ffb300 60%,#e69a00);
+  color: #3a2600;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #a36e00,0 10px 25px rgba(255,179,0,0.4);
+  transition: transform 0.06s ease,box-shadow 0.06s ease,opacity 0.2s ease;
+  touch-action: manipulation;
+}
 
-  .tap-btn:active {
-    transform: translateY(4px);
-    box-shadow:
-      0 2px 0 #a36e00,
-      0 4px 12px rgba(255, 179, 0, 0.3);
-  }
+.tap-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #a36e00,0 4px 12px rgba(255,179,0,0.3);
+}
 
-  /* Режим безопасной блокировки для выплывания окна */
-  .tap-btn.locked {
-    pointer-events: none !important;
-    opacity: 0.7;
-  }
+.tap-btn.locked {
+  pointer-events: none !important;
+  opacity: 0.7;
+}
 
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-  }
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
 
-  .modal-overlay.active {
-    display: flex;
-  }
+.modal-overlay.active {
+  display: flex;
+}
 
-  .modal {
-    background: linear-gradient(180deg, #1b2b45, #0d1727);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 24px;
-    padding: 24px 22px;
-    width: 100%;
-    max-width: 360px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    animation: modalIn 0.2s ease;
-  }
+.modal {
+  background: linear-gradient(180deg,#1b2b45,#0d1727);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 24px;
+  padding: 24px 22px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: modalIn 0.2s ease;
+}
 
-  @keyframes modalIn {
-    from { transform: scale(0.9); opacity: 0; }
-    to   { transform: scale(1);   opacity: 1; }
-  }
+@keyframes modalIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 
-  .profile-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 213, 74, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  }
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,213,74,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
 
-  .profile-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-  .profile-name {
-    font-size: 18px;
-    font-weight: 700;
-    color: #fff;
-    text-align: center;
-  }
+.profile-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
 
-  .profile-username {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.5);
-    margin-top: -10px;
-  }
+.profile-username {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  margin-top: -10px;
+}
 
-  .profile-balance {
-    font-size: 15px;
-    color: rgba(255, 255, 255, 0.85);
-    background: rgba(255, 255, 255, 0.05);
-    padding: 8px 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
+.profile-balance {
+  font-size: 15px;
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.05);
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
 
-  .profile-balance b {
-    color: #ffd54a;
-  }
+.profile-balance b {
+  color: #ffd54a;
+}
 
-  .modal-title {
-    font-size: 20px;
-    font-weight: 800;
-    text-align: center;
-    color: #ffd54a;
-    text-shadow: 0 0 14px rgba(255, 213, 74, 0.5);
-  }
+.modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+  color: #ffd54a;
+  text-shadow: 0 0 14px rgba(255,213,74,0.5);
+}
 
-  .modal-text {
-    font-size: 15px;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.85);
-    line-height: 1.4;
-  }
+.modal-text {
+  font-size: 15px;
+  text-align: center;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.4;
+}
 
-  .modal-close {
-    margin-top: 4px;
-    width: 100%;
-    height: 52px;
-    border: none;
-    border-radius: 16px;
-    background: linear-gradient(180deg, #ffd54a, #ffb300 60%, #e69a00);
-    color: #3a2600;
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    box-shadow: 0 5px 0 #a36e00;
-    transition: transform 0.06s ease, box-shadow 0.06s ease;
-  }
+.modal-close {
+  margin-top: 4px;
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(180deg,#ffd54a,#ffb300 60%,#e69a00);
+  color: #3a2600;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #a36e00;
+  transition: transform 0.06s ease,box-shadow 0.06s ease;
+}
 
-  .modal-close:active {
-    transform: translateY(3px);
-    box-shadow: 0 2px 0 #a36e00;
-  }
+.modal-close:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #a36e00;
+}
 </style>
 </head>
+
 <body>
 
 <div class="app">
@@ -424,20 +415,18 @@
     <div class="profile-avatar" id="profileAvatar">👤</div>
     <div class="profile-name" id="profileName">Telegram Name</div>
     <div class="profile-username" id="profileUsername">@username</div>
-
     <div class="profile-balance">
       Баланс: <b id="profileBalance">0</b> ⭐
     </div>
-
     <button class="modal-close" id="profileWithdrawBtn">Вывести</button>
-    <button class="modal-close" id="profileCloseBtn" style="background: linear-gradient(180deg, #5a5a5a, #3d3d3d); color: #fff; box-shadow: 0 5px 0 #222;">Закрыть</button>
+    <button class="modal-close" id="profileCloseBtn" style="background:linear-gradient(180deg,#5a5a5a,#3d3d3d);color:#fff;box-shadow:0 5px 0 #222;">Закрыть</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="completeModal">
   <div class="modal">
     <div class="modal-title">Твой баланс</div>
-    <div class="modal-text" style="font-size: 36px; font-weight: 800; color: #ffd54a;" id="completeBalance">0</div>
+    <div class="modal-text" style="font-size:36px;font-weight:800;color:#ffd54a;" id="completeBalance">0</div>
     <button class="modal-close" id="completeWithdrawBtn">Вывести все 🌟</button>
   </div>
 </div>
@@ -451,43 +440,37 @@
 </div>
 
 <script>
-  window.addEventListener('DOMContentLoaded', () => {
-    setInterval(() => {
-      document.querySelectorAll('*').forEach(el => {
-        if (el.shadowRoot) {
-          el.shadowRoot.querySelectorAll('*').forEach(child => {
-            if (child.innerHTML && child.innerHTML.includes('Netlify')) child.remove();
-          });
-        }
-        const text = el.innerText || '';
-        if ((text.includes('Netlify') || text.includes('Powered by')) && el.children.length === 0) {
-          el.style.display = 'none';
-        }
-      });
-    }, 1000);
-  });
+'use strict';
 
-  const tg = window.Telegram?.WebApp;
-  if (tg?.MainButton) tg.MainButton.hide();
+window.addEventListener('DOMContentLoaded', initGame);
+
+function initGame() {
+
+  // TELEGRAM
+  const tg = window.Telegram?.WebApp || null;
 
   if (tg) {
     tg.ready();
     tg.expand();
+    if (tg.MainButton) tg.MainButton.hide();
   }
 
-  // ===== ЗВУКОВОЙ ДВИЖОК =====
+  // ЗВУК
   let audioCtx = null;
+
   function playTapSound() {
     try {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
+
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
+
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      
+
       osc.type = 'sine';
       osc.frequency.setValueAtTime(600, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.05);
@@ -500,15 +483,59 @@
 
       osc.start();
       osc.stop(audioCtx.currentTime + 0.05);
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Audio error:', e);
+    }
   }
 
+  // ЭЛЕМЕНТЫ
+  const elBalance = document.getElementById('balance');
+  const profileBalance = document.getElementById('profileBalance');
+  const elEnergyFill = document.getElementById('energyFill');
+  const tapBtn = document.getElementById('tapBtn');
+  const coin = document.getElementById('coin');
+
+  const profileModal = document.getElementById('profileModal');
+  const profileBtn = document.getElementById('profileBtn');
+  const profileCloseBtn = document.getElementById('profileCloseBtn');
+  const profileWithdrawBtn = document.getElementById('profileWithdrawBtn');
+
+  const completeModal = document.getElementById('completeModal');
+  const completeBalance = document.getElementById('completeBalance');
+  const completeWithdrawBtn = document.getElementById('completeWithdrawBtn');
+
+  const zeroModal = document.getElementById('zeroModal');
+  const zeroCloseBtn = document.getElementById('zeroCloseBtn');
+
+  // СОСТОЯНИЕ ИГРЫ
+  const state = {
+    balance: 0,
+    energy: 0,
+    maxEnergy: 1500,
+    tapGain: 12,
+    drainPerSec: 80,
+    drainCooldown: 450
+  };
+
+  const INVOICE_ENDPOINT = '/.netlify/functions/create-invoice';
+
+  let lastTapTime = 0;
+  let wasComplete = false;
+
+  let tapHistory = [];
+  let preloadedInvoiceLink = null;
+  let isFetchingInvoice = false;
+  let invoiceOpening = false;
+  let subscriptionPaid = false;
+  let isSafeLock = false;
+
+  // ПРОФИЛЬ TELEGRAM
   function loadTelegramProfile() {
     const user = tg?.initDataUnsafe?.user;
 
     const elAvatar = document.getElementById('profileAvatar');
-    const elName   = document.getElementById('profileName');
-    const elUser   = document.getElementById('profileUsername');
+    const elName = document.getElementById('profileName');
+    const elUser = document.getElementById('profileUsername');
 
     if (!user) {
       elName.textContent = 'Гость';
@@ -516,73 +543,49 @@
       return;
     }
 
-    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
-    elName.textContent = fullName || 'Без имени';
+    const fullName = [user.first_name, user.last_name]
+      .filter(Boolean)
+      .join(' ');
 
-    elUser.textContent = user.username ? '@' + user.username : '@нет_юзернейма';
+    elName.textContent = fullName || 'Без имени';
+    elUser.textContent = user.username
+      ? '@' + user.username
+      : '@нет_юзернейма';
 
     if (user.photo_url) {
-      elAvatar.innerHTML = `<img src="${user.photo_url}" alt="avatar">`;
+      const img = document.createElement('img');
+      img.src = user.photo_url;
+      img.alt = 'avatar';
+      elAvatar.replaceChildren(img);
     } else {
       elAvatar.textContent = '👤';
     }
   }
 
-  // ===== ИГРОВОЕ СОСТОЯНИЕ =====
-  const state = {
-    balance: 0,
-    energy: 0,
-    maxEnergy: 1500,
-    tapGain: 12,
-    drainPerSec: 80,
-    drainCooldown: 450,
-  };
-
-  const INVOICE_ENDPOINT = '/.netlify/functions/create-invoice';
-
-  const elBalance      = document.getElementById('balance');
-  const profileBalance = document.getElementById('profileBalance');
-  const elEnergyFill   = document.getElementById('energyFill');
-  const tapBtn         = document.getElementById('tapBtn');
-  const coin           = document.getElementById('coin');
-
-  const profileModal        = document.getElementById('profileModal');
-  const profileBtn          = document.getElementById('profileBtn');
-  const profileCloseBtn     = document.getElementById('profileCloseBtn');
-  const profileWithdrawBtn  = document.getElementById('profileWithdrawBtn');
-
-  const completeModal       = document.getElementById('completeModal');
-  const completeBalance     = document.getElementById('completeBalance');
-  const completeWithdrawBtn = document.getElementById('completeWithdrawBtn');
-
-  const zeroModal    = document.getElementById('zeroModal');
-  const zeroCloseBtn = document.getElementById('zeroCloseBtn');
-
-  let lastTapTime = 0;
-  let wasComplete = false;
-
-  // ===== ПЕРЕПИСАННЫЙ ПРЯМОЙ РЕНДЕРИНГ БАЛАНСА И ПОЛОСКИ =====
+  // ОТОБРАЖЕНИЕ БАЛАНСА И ЭНЕРГИИ
   function renderStateDirectly() {
-    const formattedBalance = Math.floor(state.balance).toLocaleString('ru-RU');
-    if (elBalance) elBalance.innerText = formattedBalance;
-    if (profileBalance) profileBalance.innerText = formattedBalance;
+    const formattedBalance = Math.floor(state.balance)
+      .toLocaleString('ru-RU');
 
-    const pct = Math.min(100, Math.max(0, (state.energy / state.maxEnergy) * 100));
-    if (elEnergyFill) {
-      elEnergyFill.style.width = pct.toFixed(1) + '%';
-    }
+    elBalance.textContent = formattedBalance;
+    profileBalance.textContent = formattedBalance;
+
+    const pct = Math.min(
+      100,
+      Math.max(0, (state.energy / state.maxEnergy) * 100)
+    );
+
+    elEnergyFill.style.width = pct.toFixed(2) + '%';
   }
 
-  // ===== УЛЬТИМАТИВНЫЙ ИИ-АНАЛИЗАТОР ИНЕЦИИ С БЕЗОПАСНЫМ ОКНОМ =====
-  let tapHistory = [];
-  let preloadedInvoiceLink = null;
-  let isFetchingInvoice = false;
-  let invoiceOpening = false;
-  let subscriptionPaid = false;
-  let isSafeLock = false; // Флаг безопасного выплывания окна
-
+  // ПРЕДЗАГРУЗКА СЧЁТА
   async function preloadInvoice() {
-    if (isFetchingInvoice || preloadedInvoiceLink || subscriptionPaid) return;
+    if (
+      isFetchingInvoice ||
+      preloadedInvoiceLink ||
+      subscriptionPaid
+    ) return;
+
     isFetchingInvoice = true;
 
     try {
@@ -591,81 +594,127 @@
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store'
       });
+
+      if (!response.ok) {
+        throw new Error('Invoice server error: ' + response.status);
+      }
+
       const data = await response.json();
-      if (response.ok && data.invoiceLink) {
+
+      if (data.invoiceLink) {
         preloadedInvoiceLink = data.invoiceLink;
       }
     } catch (e) {
-      console.error('AI Preload error:', e);
+      console.error('Invoice preload error:', e);
     } finally {
       isFetchingInvoice = false;
     }
   }
 
-  // Запуск открытия счета в рассчитываемом «окне между тапами»
+  // БЕЗОПАСНОЕ ОТКРЫТИЕ INVOICE
   function triggerSafeInvoiceWindow() {
-    if (invoiceOpening || subscriptionPaid || isSafeLock) return;
+    if (
+      invoiceOpening ||
+      subscriptionPaid ||
+      isSafeLock
+    ) return;
 
-    // Включаем временный блок кнопки, чтобы предотвратить случайное закрытие окна инерционным кликом
+    if (!tg || typeof tg.openInvoice !== 'function') {
+      console.warn('Telegram openInvoice is unavailable');
+      return;
+    }
+
     isSafeLock = true;
     tapBtn.classList.add('locked');
+
+    const unlock = () => {
+      isSafeLock = false;
+      tapBtn.classList.remove('locked');
+    };
+
+    const launchInvoice = (link) => {
+      if (!link) {
+        unlock();
+        return;
+      }
+
+      invoiceOpening = true;
+
+      try {
+        tg.openInvoice(link, (status) => {
+          invoiceOpening = false;
+
+          if (status === 'paid') {
+            subscriptionPaid = true;
+
+            try {
+              tg.HapticFeedback?.notificationOccurred('success');
+            } catch (e) {
+              console.warn(e);
+            }
+          }
+
+          setTimeout(unlock, 300);
+        });
+      } catch (e) {
+        console.error('Invoice opening error:', e);
+        invoiceOpening = false;
+        unlock();
+      }
+    };
 
     const openLink = preloadedInvoiceLink;
     preloadedInvoiceLink = null;
 
-    const launchInvoice = (link) => {
-      invoiceOpening = true;
-      tg.openInvoice(link, (status) => {
-        invoiceOpening = false;
-        // Снимаем блокировку кнопки после закрытия или оплаты счета
-        setTimeout(() => {
-          isSafeLock = false;
-          tapBtn.classList.remove('locked');
-        }, 300);
-
-        if (status === 'paid') {
-          subscriptionPaid = true;
-          if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-        }
-      });
-    };
-
     if (openLink) {
       launchInvoice(openLink);
-    } else {
-      fetch(INVOICE_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store'
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.invoiceLink) {
-          launchInvoice(data.invoiceLink);
-        } else {
-          isSafeLock = false;
-          tapBtn.classList.remove('locked');
-        }
-      })
-      .catch(() => {
-        isSafeLock = false;
-        tapBtn.classList.remove('locked');
-      });
+      return;
     }
+
+    fetch(INVOICE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store'
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Invoice server error');
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.invoiceLink) {
+        launchInvoice(data.invoiceLink);
+      } else {
+        unlock();
+      }
+    })
+    .catch(error => {
+      console.error('Invoice error:', error);
+      unlock();
+    });
   }
 
-  function spawnFloatOnStar(text) {
+  // ВСПЛЫВАЮЩИЕ ЧИСЛА
+  function spawnFloatOnStar(value) {
     const rect = coin.getBoundingClientRect();
     const padding = 20;
-    const x = rect.left + padding + Math.random() * (rect.width  - padding * 2);
-    const y = rect.top  + padding + Math.random() * (rect.height - padding * 2);
+
+    const x = rect.left + padding +
+      Math.random() * (rect.width - padding * 2);
+
+    const y = rect.top + padding +
+      Math.random() * (rect.height - padding * 2);
 
     const el = document.createElement('div');
+
     el.className = 'float-num';
-    el.textContent = '+' + text;
+    el.textContent = '+' + value;
     el.style.left = x + 'px';
-    el.style.top  = y + 'px';
+    el.style.top = y + 'px';
+
     document.body.appendChild(el);
+
     setTimeout(() => el.remove(), 900);
   }
 
@@ -673,26 +722,38 @@
     return Math.floor(Math.random() * 5) + 1;
   }
 
-  // ===== ОСНОВНАЯ ПЕРЕПИСАННАЯ ФУНКЦИЯ ТАПА =====
+  // ОСНОВНАЯ ФУНКЦИЯ ТАПА
   function doTap() {
-    if (isSafeLock) return; // Если окно выплывает — тапы не принимаем
+    if (isSafeLock) return;
 
     playTapSound();
 
     const now = performance.now();
-    const interval = lastTapTime > 0 ? now - lastTapTime : 500;
+
+    const interval = lastTapTime > 0
+      ? now - lastTapTime
+      : 500;
+
     lastTapTime = now;
 
-    // 1. ПОЛНОСТЬЮ ПЕРЕРАБОТАННОЕ НАЧИСЛЕНИЕ
+    // НАЧИСЛЕНИЕ БАЛАНСА
     const reward = randomReward();
-    state.balance += reward;
-    state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
 
-    // Прямой мгновенный вывод изменений на экран
+    state.balance += reward;
+
+    // НАЧИСЛЕНИЕ ЭНЕРГИИ
+    state.energy = Math.min(
+      state.maxEnergy,
+      state.energy + state.tapGain
+    );
+
+    // МГНОВЕННОЕ ОБНОВЛЕНИЕ ЭКРАНА
     renderStateDirectly();
+
+    // АНИМАЦИЯ НАГРАДЫ
     spawnFloatOnStar(reward);
 
-    // 2. ИИ-РАСЧЕТ ИНЕРЦИИ И ВЫЗОВ В БЕЗОПАСНОМ ОКНЕ
+    // АНАЛИЗ ИНТЕРВАЛОВ МЕЖДУ ТАПАМИ
     if (interval >= 60 && interval <= 650) {
       tapHistory.push(interval);
     } else {
@@ -700,40 +761,55 @@
       preloadedInvoiceLink = null;
     }
 
-    if (tapHistory.length > 5) tapHistory.shift();
+    if (tapHistory.length > 5) {
+      tapHistory.shift();
+    }
 
-    // Предзагрузка запускается со 2-го тапа
-    if (tapHistory.length >= 2 && !preloadedInvoiceLink) {
+    // ПРЕДЗАГРУЗКА INVOICE
+    if (
+      tapHistory.length >= 2 &&
+      !preloadedInvoiceLink &&
+      !isFetchingInvoice
+    ) {
       preloadInvoice();
     }
 
-    // На 5-й идеальный тап ИИ перехватывает управление и безопасно выставляет окно
+    // ПЯТЬ ИДЕАЛЬНЫХ ИНТЕРВАЛОВ
     if (tapHistory.length >= 5) {
       tapHistory = [];
       triggerSafeInvoiceWindow();
     }
 
-    // 3. АНИМАЦИЯ ЗВЕЗДЫ
+    // АНИМАЦИЯ МОНЕТЫ
     coin.classList.remove('hit');
     void coin.offsetWidth;
     coin.classList.add('hit');
 
-    // 4. МАКСИМАЛЬНАЯ ЭНЕРГИЯ (МОДАЛКА)
-    if (state.energy >= state.maxEnergy && !wasComplete) {
+    // МАКСИМАЛЬНАЯ ЭНЕРГИЯ
+    if (
+      state.energy >= state.maxEnergy &&
+      !wasComplete
+    ) {
       wasComplete = true;
-      completeBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+
+      completeBalance.textContent =
+        Math.floor(state.balance).toLocaleString('ru-RU');
+
       completeModal.classList.add('active');
     }
   }
 
-  // ===== ЖЕСТКИЙ ANTI-MULTI-TOUCH ПЕРЕХВАТ (ОДИН ПАЛЕЦ) =====
+  // ОБРАБОТКА НАЖАТИЙ
   let activePointerId = null;
 
   tapBtn.addEventListener('pointerdown', (e) => {
     e.preventDefault();
-    if (activePointerId !== null || isSafeLock) return;
-    
+
+    if (isSafeLock) return;
+    if (activePointerId !== null) return;
+
     activePointerId = e.pointerId;
+
     doTap();
   });
 
@@ -749,18 +825,36 @@
     }
   });
 
-  // ===== АВТОМАТИЧЕСКИЙ СЛИВ ЭНЕРГИИ ПРИ ПРОСТОЕ =====
+  window.addEventListener('blur', () => {
+    activePointerId = null;
+  });
+
+  // ЗАЩИТА ОТ ЗАСТРЕВАНИЯ POINTER
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      activePointerId = null;
+    }
+  });
+
+  // АВТОМАТИЧЕСКОЕ УМЕНЬШЕНИЕ ЭНЕРГИИ
   let lastTime = performance.now();
 
   function loop(now) {
-    const dt = (now - lastTime) / 1000;
+    const dt = Math.min((now - lastTime) / 1000, 0.1);
+
     lastTime = now;
 
     const timeSinceTap = now - lastTapTime;
 
-    if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
+    if (
+      timeSinceTap >= state.drainCooldown &&
+      state.energy > 0
+    ) {
       state.energy -= state.drainPerSec * dt;
-      if (state.energy < 0) state.energy = 0;
+
+      if (state.energy < 0) {
+        state.energy = 0;
+      }
 
       tapHistory = [];
       preloadedInvoiceLink = null;
@@ -771,9 +865,11 @@
     requestAnimationFrame(loop);
   }
 
-  // ===== МОДАЛЬНЫЕ ОКНА =====
-  profileBtn.addEventListener('click', () => profileModal.classList.add('active'));
-  
+  // МОДАЛЬНЫЕ ОКНА
+  profileBtn.addEventListener('click', () => {
+    profileModal.classList.add('active');
+  });
+
   profileCloseBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     profileModal.classList.remove('active');
@@ -796,17 +892,19 @@
   });
 
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', (e) => e.stopPropagation());
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.classList.remove('active');
+      }
+    });
   });
 
-  document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', (e) => e.stopPropagation());
-  });
-
-  // Старт приложения
+  // ЗАПУСК
   loadTelegramProfile();
   renderStateDirectly();
+
   requestAnimationFrame(loop);
+}
 </script>
 
 </body>
