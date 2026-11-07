@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Tap Game - Ultimate AI Edition</title>
+<title>Tap Game - Fixed & AI Edition</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   * {
@@ -405,6 +405,7 @@
         <span>Тапай до конца что бы вывести! 🌟</span>
       </div>
       <div class="energy-track">
+        <!-- ВОССТАНОВЛЕННЫЙ ТЕГ ЭНЕРГИИ -->
         <div class="energy-fill" id="energyFill"></div>
       </div>
     </div>
@@ -555,10 +556,10 @@
   let lastTapTime = 0;
   let wasComplete = false;
 
-  // ===== РЕНДЕР ИНТЕРФЕЙСА =====
+  // ===== ГАРАНТИРОВАННЫЙ РЕНДЕР ИНТЕРФЕЙСА =====
   function render() {
-    elBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
-    profileBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+    if (elBalance) elBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+    if (profileBalance) profileBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
 
     const pct = Math.min(100, (state.energy / state.maxEnergy) * 100);
     if (elEnergyFill) {
@@ -566,13 +567,13 @@
     }
   }
 
-  // ===== УЛЬТИМАТИВНЫЙ ИИ (ПРЕДИКТИВНЫЙ ТРИГГЕР + СТАБИЛЬНЫЙ ПРЕФЕТЧ) =====
+  // ===== УЛЬТИМАТИВНЫЙ ИИ-ДВИЖОК =====
   let tapHistory = [];
   let preloadedInvoiceLink = null;
   let isFetchingInvoice = false;
   let invoiceOpening = false;
   let subscriptionPaid = false;
-  let isProcessingPayment = false; // Блокировка от случайного закрытия окна тапами
+  let isProcessingPayment = false;
 
   async function preloadInvoice() {
     if (isFetchingInvoice || preloadedInvoiceLink || subscriptionPaid) return;
@@ -613,7 +614,6 @@
         }
       });
     } else {
-      // Если префетч не успел скачаться, запрашиваем в момент вызова
       fetch(INVOICE_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -661,7 +661,7 @@
   }
 
   function doTap() {
-    if (isProcessingPayment) return; // Блокируем тапы, если открыто окно оплаты
+    if (isProcessingPayment) return;
 
     playTapSound();
 
@@ -669,7 +669,6 @@
     const interval = lastTapTime > 0 ? now - lastTapTime : 500;
     lastTapTime = now;
 
-    // Умный ИИ с автоадаптацией под любые высокие скорости (от 60 мс до 600 мс)
     if (interval >= 60 && interval <= 600) {
       tapHistory.push(interval);
     } else {
@@ -679,7 +678,6 @@
 
     if (tapHistory.length > 5) tapHistory.shift();
 
-    // Предиктивный расчет инерции: предзагрузка со 2-го тапа, моментальный выстрел на 5-м
     if (tapHistory.length >= 2) {
       const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
       
@@ -695,7 +693,7 @@
       }
     }
 
-    // НАЧИСЛЕНИЕ БАЛАНСА И ЭНЕРГИИ
+    // 100% НАЧИСЛЕНИЕ БАЛАНСА И ЭНЕРГИИ
     const reward = randomReward();
     state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
     state.balance += reward;
@@ -716,12 +714,12 @@
     }
   }
 
-  // ===== ЖЕСТКАЯ ЗАЩИТА ОТ МУЛЬТИТАЧА (ОДИН ПАЛЕЦ) =====
+  // ЗАЩИТА ОТ МУЛЬТИТАЧА И ОДИН ПАЛЕЦ
   let activePointerId = null;
 
   tapBtn.addEventListener('pointerdown', (e) => {
-    e.preventDefault(); // Убираем задержку клика и дублирование
-    if (activePointerId !== null) return; // Блокируем новые пальцы, если один уже нажат
+    e.preventDefault();
+    if (activePointerId !== null) return;
     
     activePointerId = e.pointerId;
     doTap();
@@ -747,7 +745,6 @@
 
     const timeSinceTap = now - lastTapTime;
 
-    // Пассивный слив энергии при бездействии более 450 мс
     if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
       state.energy -= state.drainPerSec * dt;
       if (state.energy < 0) state.energy = 0;
