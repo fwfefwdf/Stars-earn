@@ -1,4 +1,4 @@
-// Создаёт ежемесячный счёт Telegram Stars на 10 ⭐.
+// Создаёт ежемесячный счёт Telegram Stars на 1 ⭐.
 // BOT_TOKEN задаётся в Netlify → Site configuration → Environment variables.
 exports.handler = async function () {
   const token = process.env.BOT_TOKEN;
@@ -12,7 +12,7 @@ exports.handler = async function () {
     payload: 'stats_earn_monthly_subscription',
     provider_token: '',
     currency: 'XTR',
-    prices: [{ label: 'Подписка на месяц', amount: 10 }],
+    prices: [{ label: 'Подписка на месяц', amount: 1 }],
     subscription_period: 2592000
   };
 
