@@ -799,15 +799,18 @@ function initGame() {
     }
   }
 
-    // ОБРАБОТКА НАЖАТИЙ
-  tapBtn.addEventListener('click', (e) => {
+     // ОБРАБОТКА НАЖАТИЙ — ИСПРАВЛЕННАЯ
+  tapBtn.addEventListener('pointerdown', function(e) {
     e.preventDefault();
 
     if (isSafeLock) return;
 
     doTap();
-  });
+  }, { passive: false });
 
+  tapBtn.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  });
   // ЗАЩИТА ОТ ЗАСТРЕВАНИЯ POINTER
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
