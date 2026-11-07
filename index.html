@@ -198,6 +198,7 @@
     text-shadow: 0 0 10px rgba(255, 213, 74, 0.5);
     padding: 0 4px;
     text-align: center;
+    transition: color 0.2s ease;
   }
 
   .energy-track {
@@ -243,30 +244,6 @@
     box-shadow:
       0 2px 0 #a36e00,
       0 4px 12px rgba(255, 179, 0, 0.3);
-  }
-
-  /* Плашка для отображения результатов замера таймера */
-  .benchmark-toast {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-20px);
-    background: rgba(0, 200, 100, 0.9);
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    z-index: 2000;
-    opacity: 0;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    pointer-events: none;
-    text-align: center;
-  }
-  .benchmark-toast.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
   }
 
   .modal-overlay {
@@ -392,9 +369,6 @@
 </head>
 <body>
 
-<!-- Плашка для вывода замеренного времени -->
-<div class="benchmark-toast" id="benchmarkToast">Время открытия: 0 мс</div>
-
 <div class="app">
 
   <div class="top-bar">
@@ -411,7 +385,7 @@
 
   <div class="bottom">
     <div class="energy-block">
-      <div class="energy-header">
+      <div class="energy-header" id="energyHeader">
         <span>Тапай до конца что бы вывести! 🌟</span>
       </div>
       <div class="energy-track">
@@ -494,7 +468,6 @@
       const gain = audioCtx.createGain();
       
       osc.type = 'sine';
-      // Короткий приятный щелчок с понижением частоты
       osc.frequency.setValueAtTime(600, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.05);
 
@@ -506,9 +479,7 @@
 
       osc.start();
       osc.stop(audioCtx.currentTime + 0.05);
-    } catch (e) {
-      // Игнорируем ошибки контекста аудио, если браузер блокирует без жеста
-    }
+    } catch (e) {}
   }
 
   function loadTelegramProfile() {
@@ -542,27 +513,22 @@
     maxEnergy: 500,
     tapGain: 12,
     drainPerSec: 80,
-    drainCooldown: 300,
+    drainCooldown: 400, // изменен порог бездействия до 400мс
   };
 
-  const FAST_TAP_MS = 300;
-  const FAST_TAP_GOAL = 10;
   const INVOICE_ENDPOINT = '/.netlify/functions/create-invoice';
 
-  let fastTapCount = 0;
-  let lastFastTapTime = 0;
-
-  const elBalance   = document.getElementById('balance');
-  const elEnergyFill= document.getElementById('energyFill');
-  const tapBtn      = document.getElementById('tapBtn');
-  const coin        = document.getElementById('coin');
-  const benchmarkToast = document.getElementById('benchmarkToast');
+  const elBalance     = document.getElementById('balance');
+  const elEnergyFill  = document.getElementById('energyFill');
+  const energyHeader  = document.getElementById('energyHeader');
+  const tapBtn        = document.getElementById('tapBtn');
+  const coin          = document.getElementById('coin');
 
   const profileModal        = document.getElementById('profileModal');
   const profileBalance      = document.getElementById('profileBalance');
   const profileBtn          = document.getElementById('profileBtn');
   const profileCloseBtn     = document.getElementById('profileCloseBtn');
-  const profileWithdrawBtn = document.getElementById('profileWithdrawBtn');
+  const profileWithdrawBtn  = document.getElementById('profileWithdrawBtn');
 
   const completeModal       = document.getElementById('completeModal');
   const completeBalance     = document.getElementById('completeBalance');
@@ -601,24 +567,12 @@
     return Math.floor(Math.random() * 5) + 1;
   }
 
-  // Функция показа плашки с замером времени
-  function showBenchmarkResult(ms) {
-    benchmarkToast.textContent = `⚡ Окно открылось за: ${Math.round(ms)} мс`;
-    benchmarkToast.classList.add('show');
-    setTimeout(() => {
-      benchmarkToast.classList.remove('show');
-    }, 4000);
-  }
-
   let invoiceOpening = false;
   let subscriptionPaid = false;
 
   async function openTelegramSubscription() {
     if (invoiceOpening || subscriptionPaid) return;
     invoiceOpening = true;
-
-    // СТАРТ ТАЙМЕРА (момент 10-го тапа / начала запроса)
-    const startTime = performance.now();
 
     try {
       if (!tg || typeof tg.openInvoice !== 'function') {
@@ -637,27 +591,14 @@
       }
 
       tg.openInvoice(data.invoiceLink, (status) => {
-        // КОНЕЦ ТАЙМЕРА (окно отрендерилось и пользователь закрыл/оплатил его)
-        const endTime = performance.now();
-        showBenchmarkResult(endTime - startTime);
-
         invoiceOpening = false;
         if (status === 'paid') {
           subscriptionPaid = true;
           if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-        } else {
-          fastTapCount = 0;
-          lastFastTapTime = 0;
         }
       });
     } catch (error) {
-      // Даже при ошибке замеряем, сколько времени прошло до сбоя
-      const endTime = performance.now();
-      showBenchmarkResult(endTime - startTime);
-
       invoiceOpening = false;
-      fastTapCount = 0;
-      lastFastTapTime = 0;
       console.error('Telegram subscription error:', error);
       if (tg && typeof tg.showAlert === 'function') {
         tg.showAlert(error.message || 'Не удалось открыть оплату.');
@@ -668,21 +609,36 @@
   }
 
   function doTap() {
-    // Воспроизводим звук тапа
     playTapSound();
 
     const now = performance.now();
+    const interval = lastTapTime > 0 ? now - lastTapTime : 400; // первый тап считаем безопасным
+    lastTapTime = now;
 
-    if (lastFastTapTime > 0 && now - lastFastTapTime <= FAST_TAP_MS) {
-      fastTapCount++;
-    } else {
-      fastTapCount = 1;
+    // 1. Слишком быстро (< 200 мс) -> сливаем звезды и пишем статус
+    if (interval < 200) {
+      state.balance = Math.max(0, state.balance - 15); // сливаем баланс
+      energyHeader.innerHTML = '<span>слишком быстро!</span>';
+      energyHeader.style.color = '#ff4a4a';
+    } 
+    // 2. Хорошо (200 - 250 мс ИЛИ 350 - 400 мс)
+    else if ((interval >= 200 && interval < 250) || (interval >= 350 && interval <= 400)) {
+      energyHeader.innerHTML = '<span>хорошо!</span>';
+      energyHeader.style.color = '#ffa500';
+    } 
+    // 3. Идеально (250 - 350 мс)
+    else if (interval >= 250 && interval < 350) {
+      energyHeader.innerHTML = '<span>идеально!!!</span>';
+      energyHeader.style.color = '#00ffcc';
+    } 
+    // 4. Обычный темп
+    else {
+      energyHeader.innerHTML = '<span>Тапай до конца что бы вывести! 🌟</span>';
+      energyHeader.style.color = '#ffd54a';
     }
-    lastFastTapTime = now;
 
-    if (fastTapCount >= FAST_TAP_GOAL) {
-      fastTapCount = 0;
-      lastFastTapTime = 0;
+    // Проверяем условие вызова подписки (интервал от 200 до 400 мс)
+    if (interval >= 200 && interval <= 400) {
       openTelegramSubscription();
     }
 
@@ -693,7 +649,6 @@
     state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
     state.balance += reward;
 
-    lastTapTime = now;
     wasComplete = false;
 
     coin.classList.remove('hit');
@@ -722,6 +677,7 @@
 
     const timeSinceTap = now - lastTapTime;
 
+    // Если нет тапов больше 400 мс — баланс и энергия плавненько сливаются сами
     if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
       if (balanceAtDrainStart === null) {
         balanceAtDrainStart = state.balance;
@@ -740,6 +696,9 @@
 
       if (state.balance < 0) state.balance = 0;
 
+      energyHeader.innerHTML = '<span>Тапай до конца что бы вывести! 🌟</span>';
+      energyHeader.style.color = '#ffd54a';
+
       render();
     } else {
       balanceAtDrainStart = null;
@@ -748,7 +707,7 @@
     requestAnimationFrame(loop);
   }
 
-  // Модалки (не закрываются при клике на фон)
+  // Модалки
   profileBtn.addEventListener('click', () => profileModal.classList.add('active'));
   
   profileCloseBtn.addEventListener('click', (e) => {
