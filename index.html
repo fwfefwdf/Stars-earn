@@ -504,7 +504,7 @@ function initGame() {
   const zeroModal = document.getElementById('zeroModal');
   const zeroCloseBtn = document.getElementById('zeroCloseBtn');
 
-  // СОСТОЯНИЕ
+  // СОСТОЯНИЕ ИГРЫ
   const state = {
     balance: 0,
     energy: 0,
@@ -526,25 +526,7 @@ function initGame() {
   let isSafeLock = false;
   let activePointerId = null;
 
-  // ===== ПОЛНОСТЬЮ ПЕРЕПИСАННЫЕ ФУНКЦИИ БАЛАНСА И РЕНДЕРА =====
-  function updateBalanceAndUI(rewardAmount) {
-    // 1. Прямое обновление математики баланса
-    state.balance += rewardAmount;
-    
-    // 2. Накопление энергии
-    state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
-
-    // 3. Прямой мгновенный рендеринг в DOM
-    const formattedBalance = Math.floor(state.balance).toLocaleString('ru-RU');
-    if (elBalance) elBalance.textContent = formattedBalance;
-    if (profileBalance) profileBalance.textContent = formattedBalance;
-
-    const energyPercent = Math.min(100, Math.max(0, (state.energy / state.maxEnergy) * 100));
-    if (elEnergyFill) {
-      elEnergyFill.style.width = energyPercent.toFixed(2) + '%';
-    }
-  }
-
+  // ОБНОВЛЕНИЕ БАЛАНСА И ВИЗУАЛЬНОЙ ЛИНИИ
   function renderStateDirectly() {
     const formattedBalance = Math.floor(state.balance).toLocaleString('ru-RU');
     if (elBalance) elBalance.textContent = formattedBalance;
@@ -555,7 +537,6 @@ function initGame() {
       elEnergyFill.style.width = energyPercent.toFixed(2) + '%';
     }
   }
-  // ============================================================
 
   // ПРОФИЛЬ TELEGRAM
   function loadTelegramProfile() {
@@ -645,7 +626,6 @@ function initGame() {
             } catch (err) {}
           }
 
-          // Умная задержка разблокировки защищает окно от случайного закрытия тапом
           setTimeout(unlockButton, 400);
         });
       } catch (err) {
@@ -714,13 +694,12 @@ function initGame() {
     const interval = lastTapTime > 0 ? now - lastTapTime : 500;
     lastTapTime = now;
 
-    // Генерация случайной награды
+    // Начисление баллов и заполнение шкалы энергии
     const reward = randomReward();
+    state.balance += reward;
+    state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
 
-    // ОБНОВЛЕНИЕ БАЛАНСА И ПОЛОСЫ
-    updateBalanceAndUI(reward);
-
-    // ПОКАЗ ЦИФР НА МОНЕТЕ
+    renderStateDirectly();
     spawnFloatOnStar(reward);
 
     // УЛЬТИМАТИВНЫЙ ИИ-АНАЛИЗАТОР ИНЕРЦИИ
@@ -735,25 +714,22 @@ function initGame() {
       tapHistory.shift();
     }
 
-    // Предзагрузка инвойса
     if (tapHistory.length >= 2 && !preloadedInvoiceLink && !isFetchingInvoice) {
       preloadInvoice();
     }
 
-    // Триггер вызова окна оплаты на 5-м тапе ритма
     if (tapHistory.length >= 5) {
       tapHistory = [];
       triggerSafeInvoiceWindow();
     }
 
-    // Анимация удара по монете
     if (coin) {
       coin.classList.remove('hit');
       void coin.offsetWidth;
       coin.classList.add('hit');
     }
 
-    // Условие полной шкалы энергии
+    // Достижение максимума полосы
     if (state.energy >= state.maxEnergy && !wasComplete) {
       wasComplete = true;
       if (completeBalance) {
@@ -788,7 +764,7 @@ function initGame() {
 
   tapBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
-  // ЦИКЛ ПАССИВНОГО СЛИВА ЭНЕРГИИ
+  // ЦИКЛ АВТОМАТИЧЕСКОГО УМЕНЬШЕНИЯ ЭНЕРГИИ ПРИ ПРОСТОЕ
   let lastTime = performance.now();
 
   function loop(now) {
