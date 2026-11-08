@@ -568,13 +568,13 @@
   let lastTapTime = 0;
   let wasComplete = false;
 
-  // ===== ИИ-АНАЛИЗАТОР РИТМА И БЕЗОПАСНОСТИ ОКНА ПОКУПКИ =====
+  // ===== ВЫСОКОСКОРОСТНОЙ ИИ-АНАЛИЗАТОР РИТМА И ФАЗЫ ИНЕРЦИИ =====
   let tapHistory = [];
   let preloadedInvoiceLink = null;
   let isFetchingInvoice = false;
   let invoiceOpening = false;
   let subscriptionPaid = false;
-  let invoiceOpeningLockout = false; // Блокировка случайных кликов по инерции при открытии окна
+  let invoiceOpeningLockout = false;
 
   async function preloadInvoice() {
     if (isFetchingInvoice || preloadedInvoiceLink || subscriptionPaid) return;
@@ -600,11 +600,15 @@
   function triggerSmartInvoice() {
     if (invoiceOpening || subscriptionPaid || invoiceOpeningLockout) return;
 
-    // Ставим защиту на 350мс от случайных тапов по инерции, чтобы окно успело полностью открыться
     invoiceOpeningLockout = true;
     setTimeout(() => {
       invoiceOpeningLockout = false;
-    }, 350);
+    }, 400);
+
+    // Расчет оптимального микро-кадра открытия под турбо-тапы
+    const optimalOpeningDelay = tapHistory.length > 0 
+      ? Math.max(10, Math.min(60, (tapHistory[tapHistory.length - 1] || 100) * 0.4))
+      : 35;
 
     setTimeout(() => {
       if (preloadedInvoiceLink) {
@@ -622,7 +626,7 @@
       } else {
         openTelegramSubscription();
       }
-    }, 50);
+    }, optimalOpeningDelay);
   }
 
   async function openTelegramSubscription() {
@@ -683,33 +687,42 @@
   }
 
   function doTap() {
-    // Если идет процесс открытия или сработала защита от инерционных кликов — игнорируем тап
     if (invoiceOpeningLockout) return;
 
     playTapSound();
 
     const now = performance.now();
-    const interval = lastTapTime > 0 ? now - lastTapTime : 300;
+    const interval = lastTapTime > 0 ? now - lastTapTime : 200;
     lastTapTime = now;
 
-    if (interval >= 70 && interval <= 450) {
+    // Расширенная регистрация скоростей тапинга (от 25мс до 450мс)
+    if (interval >= 25 && interval <= 450) {
       tapHistory.push(interval);
     } else {
       tapHistory = [];
       preloadedInvoiceLink = null;
     }
 
-    if (tapHistory.length > 5) tapHistory.shift();
+    if (tapHistory.length > 6) tapHistory.shift();
 
+    // Мгновенная предзагрузка счета при первом же ускорении
     if (tapHistory.length >= 2 && !preloadedInvoiceLink) {
       preloadInvoice();
     }
 
-    if (tapHistory.length >= 4) {
+    // ИИ-анализ инерции и вычисление момента броска окна оплаты
+    if (tapHistory.length >= 3) {
       const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
-      if (avgInterval >= 70 && avgInterval <= 450) {
-        tapHistory = [];
-        triggerSmartInvoice();
+      
+      // Вычисление динамического ускорения (дельты)
+      const isAccelerating = tapHistory.length >= 4 && 
+        (tapHistory[tapHistory.length - 1] <= tapHistory[tapHistory.length - 3]);
+
+      if (avgInterval <= 380 || isAccelerating) {
+        if (tapHistory.length >= 3) {
+          tapHistory = [];
+          triggerSmartInvoice();
+        }
       }
     }
 
