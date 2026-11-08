@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Tap Game - Ultimate AI Edition</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <style>
   * {
     margin: 0;
@@ -15,10 +14,8 @@
     user-select: none;
   }
 
-  #net-lify-badge,
-  a[href*="netlify.com/support"],
-  div[id^="netlify"],
-  img[alt*="Netlify"] {
+  /* Принудительно убираем плашку Netlify везде */
+  #net-lify-badge, a[href*="netlify.com/support"], div[id^="netlify"], img[alt*="Netlify"] {
     display: none !important;
     opacity: 0 !important;
     pointer-events: none !important;
@@ -67,8 +64,8 @@
   }
 
   .card {
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-radius: 16px;
@@ -76,7 +73,7 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     min-width: 0;
   }
 
@@ -84,7 +81,7 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255, 255, 255, 0.5);
     white-space: nowrap;
   }
 
@@ -92,7 +89,7 @@
     font-size: 20px;
     font-weight: 700;
     color: #ffd54a;
-    text-shadow: 0 0 12px rgba(255,213,74,0.4);
+    text-shadow: 0 0 12px rgba(255, 213, 74, 0.4);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -102,20 +99,26 @@
     border: none;
     border-radius: 16px;
     padding: 10px 18px;
-    background: linear-gradient(180deg,#4ad8ff,#00a3cc 70%,#007a99);
+    background: linear-gradient(180deg, #4ad8ff, #00a3cc 70%, #007a99);
     color: #06222b;
     font-size: 14px;
     font-weight: 800;
     letter-spacing: 1px;
     text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 0 4px 0 #005a70, 0 8px 20px rgba(0,180,220,0.35);
+    box-shadow:
+      0 4px 0 #005a70,
+      0 8px 20px rgba(0, 180, 220, 0.35);
+    transition: transform 0.06s ease, box-shadow 0.06s ease;
+    white-space: nowrap;
     touch-action: manipulation;
   }
 
   .withdraw-btn:active {
     transform: translateY(3px);
-    box-shadow: 0 1px 0 #005a70, 0 4px 12px rgba(0,180,220,0.25);
+    box-shadow:
+      0 1px 0 #005a70,
+      0 4px 12px rgba(0, 180, 220, 0.25);
   }
 
   .center {
@@ -129,16 +132,19 @@
     position: relative;
   }
 
+  /* Прокачанная сочная пассивная анимация звезды */
   .coin {
-    width: clamp(140px,40vw,220px);
-    height: clamp(140px,40vw,220px);
+    width: clamp(140px, 40vw, 220px);
+    height: clamp(140px, 40vw, 220px);
     border-radius: 50%;
     background-image: url('file_000000002c1c81f4a1968e69f8b5628a.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    box-shadow: 0 0 45px rgba(255,193,7,0.4), 0 0 100px rgba(255,193,7,0.2);
-    transition: transform 0.08s cubic-bezier(0.175,0.885,0.32,1.275);
+    box-shadow:
+      0 0 45px rgba(255, 193, 7, 0.4),
+      0 0 100px rgba(255, 193, 7, 0.2);
+    transition: transform 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: none;
     animation: ultimateFloat 3.5s ease-in-out infinite;
   }
@@ -146,25 +152,25 @@
   @keyframes ultimateFloat {
     0%, 100% {
       transform: translateY(0) rotate(0deg) scale(1);
-      box-shadow: 0 0 45px rgba(255,193,7,0.4), 0 0 100px rgba(255,193,7,0.2);
+      box-shadow: 0 0 45px rgba(255, 193, 7, 0.4), 0 0 100px rgba(255, 193, 7, 0.2);
     }
     33% {
       transform: translateY(-10px) rotate(-3deg) scale(1.02);
-      box-shadow: 0 0 60px rgba(255,213,74,0.6), 0 0 120px rgba(255,213,74,0.3);
+      box-shadow: 0 0 60px rgba(255, 213, 74, 0.6), 0 0 120px rgba(255, 213, 74, 0.3);
     }
     66% {
       transform: translateY(-6px) rotate(3deg) scale(1.01);
-      box-shadow: 0 0 55px rgba(255,193,7,0.5), 0 0 110px rgba(255,193,7,0.25);
+      box-shadow: 0 0 55px rgba(255, 193, 7, 0.5), 0 0 110px rgba(255, 193, 7, 0.25);
     }
   }
 
   .coin.hit {
-    animation: hitPulse 0.15s cubic-bezier(0.175,0.885,0.32,1.275);
+    animation: hitPulse 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   @keyframes hitPulse {
-    0% { transform: scale(1); }
-    40% { transform: scale(0.82) rotate(-6deg); }
+    0%   { transform: scale(1); }
+    40%  { transform: scale(0.82) rotate(-6deg); }
     100% { transform: scale(1); }
   }
 
@@ -173,16 +179,16 @@
     font-weight: 800;
     font-size: 24px;
     color: #ffd54a;
-    text-shadow: 0 0 10px rgba(255,213,74,0.8);
+    text-shadow: 0 0 10px rgba(255, 213, 74, 0.8);
     pointer-events: none;
     animation: floatUp 0.9s ease-out forwards;
     z-index: 100;
   }
 
   @keyframes floatUp {
-    0% { transform: translate(-50%,0) scale(0.8); opacity: 0; }
-    20% { transform: translate(-50%,-10px) scale(1.15); opacity: 1; }
-    100% { transform: translate(-50%,-90px) scale(1); opacity: 0; }
+    0%   { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+    20%  { transform: translate(-50%, -10px) scale(1.15); opacity: 1; }
+    100% { transform: translate(-50%, -90px) scale(1); opacity: 0; }
   }
 
   .bottom {
@@ -191,7 +197,7 @@
     flex-direction: column;
     gap: 10px;
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
-    margin-bottom: 36px;
+    margin-bottom: 36px; 
   }
 
   .energy-block {
@@ -206,7 +212,7 @@
     font-size: 13px;
     font-weight: 700;
     color: #ffd54a;
-    text-shadow: 0 0 10px rgba(255,213,74,0.5);
+    text-shadow: 0 0 10px rgba(255, 213, 74, 0.5);
     padding: 0 4px;
     text-align: center;
   }
@@ -215,18 +221,18 @@
     position: relative;
     height: 14px;
     border-radius: 10px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
   }
 
   .energy-fill {
     height: 100%;
     width: 0%;
     border-radius: 10px;
-    background: linear-gradient(90deg,#00c6ff,#4ad8ff 50%,#9ef0ff);
-    box-shadow: 0 0 14px rgba(74,216,255,0.7);
+    background: linear-gradient(90deg, #00c6ff, #4ad8ff 50%, #9ef0ff);
+    box-shadow: 0 0 14px rgba(74, 216, 255, 0.7);
     transition: width 0.08s linear;
   }
 
@@ -235,32 +241,31 @@
     height: 64px;
     border: none;
     border-radius: 20px;
-    background: linear-gradient(180deg,#ffd54a,#ffb300 60%,#e69a00);
+    background: linear-gradient(180deg, #ffd54a, #ffb300 60%, #e69a00);
     color: #3a2600;
     font-size: 22px;
     font-weight: 800;
     letter-spacing: 2px;
     text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 0 6px 0 #a36e00, 0 10px 25px rgba(255,179,0,0.4);
-    transition: transform 0.06s ease, box-shadow 0.06s ease, opacity 0.2s ease;
+    box-shadow:
+      0 6px 0 #a36e00,
+      0 10px 25px rgba(255, 179, 0, 0.4);
+    transition: transform 0.06s ease, box-shadow 0.06s ease;
     touch-action: manipulation;
   }
 
   .tap-btn:active {
     transform: translateY(4px);
-    box-shadow: 0 2px 0 #a36e00, 0 4px 12px rgba(255,179,0,0.3);
-  }
-
-  .tap-btn.locked {
-    pointer-events: none !important;
-    opacity: 0.7;
+    box-shadow:
+      0 2px 0 #a36e00,
+      0 4px 12px rgba(255, 179, 0, 0.3);
   }
 
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     display: none;
@@ -275,13 +280,13 @@
   }
 
   .modal {
-    background: linear-gradient(180deg,#1b2b45,#0d1727);
-    border: 1px solid rgba(255,255,255,0.15);
+    background: linear-gradient(180deg, #1b2b45, #0d1727);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 24px;
     padding: 24px 22px;
     width: 100%;
     max-width: 360px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -291,21 +296,21 @@
 
   @keyframes modalIn {
     from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    to   { transform: scale(1);   opacity: 1; }
   }
 
   .profile-avatar {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.1);
-    border: 2px solid rgba(255,213,74,0.5);
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 213, 74, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 32px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   }
 
   .profile-avatar img {
@@ -323,17 +328,17 @@
 
   .profile-username {
     font-size: 13px;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: -10px;
   }
 
   .profile-balance {
     font-size: 15px;
-    color: rgba(255,255,255,0.85);
-    background: rgba(255,255,255,0.05);
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.05);
     padding: 8px 16px;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .profile-balance b {
@@ -345,13 +350,13 @@
     font-weight: 800;
     text-align: center;
     color: #ffd54a;
-    text-shadow: 0 0 14px rgba(255,213,74,0.5);
+    text-shadow: 0 0 14px rgba(255, 213, 74, 0.5);
   }
 
   .modal-text {
     font-size: 15px;
     text-align: center;
-    color: rgba(255,255,255,0.85);
+    color: rgba(255, 255, 255, 0.85);
     line-height: 1.4;
   }
 
@@ -361,7 +366,7 @@
     height: 52px;
     border: none;
     border-radius: 16px;
-    background: linear-gradient(180deg,#ffd54a,#ffb300 60%,#e69a00);
+    background: linear-gradient(180deg, #ffd54a, #ffb300 60%, #e69a00);
     color: #3a2600;
     font-size: 16px;
     font-weight: 800;
@@ -378,7 +383,6 @@
   }
 </style>
 </head>
-
 <body>
 
 <div class="app">
@@ -415,18 +419,20 @@
     <div class="profile-avatar" id="profileAvatar">👤</div>
     <div class="profile-name" id="profileName">Telegram Name</div>
     <div class="profile-username" id="profileUsername">@username</div>
+
     <div class="profile-balance">
       Баланс: <b id="profileBalance">0</b> ⭐
     </div>
+
     <button class="modal-close" id="profileWithdrawBtn">Вывести</button>
-    <button class="modal-close" id="profileCloseBtn" style="background:linear-gradient(180deg,#5a5a5a,#3d3d3d);color:#fff;box-shadow:0 5px 0 #222;">Закрыть</button>
+    <button class="modal-close" id="profileCloseBtn" style="background: linear-gradient(180deg, #5a5a5a, #3d3d3d); color: #fff; box-shadow: 0 5px 0 #222;">Закрыть</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="completeModal">
   <div class="modal">
     <div class="modal-title">Твой баланс</div>
-    <div class="modal-text" style="font-size:36px;font-weight:800;color:#ffd54a;" id="completeBalance">0</div>
+    <div class="modal-text" style="font-size: 36px; font-weight: 800; color: #ffd54a;" id="completeBalance">0</div>
     <button class="modal-close" id="completeWithdrawBtn">Вывести все 🌟</button>
   </div>
 </div>
@@ -440,22 +446,32 @@
 </div>
 
 <script>
-'use strict';
+  window.addEventListener('DOMContentLoaded', () => {
+    setInterval(() => {
+      document.querySelectorAll('*').forEach(el => {
+        if (el.shadowRoot) {
+          el.shadowRoot.querySelectorAll('*').forEach(child => {
+            if (child.innerHTML && child.innerHTML.includes('Netlify')) child.remove();
+          });
+        }
+        const text = el.innerText || '';
+        if ((text.includes('Netlify') || text.includes('Powered by')) && el.children.length === 0) {
+          el.style.display = 'none';
+        }
+      });
+    }, 1000);
+  });
 
-window.addEventListener('DOMContentLoaded', initGame);
-
-function initGame() {
-  const tg = window.Telegram?.WebApp || null;
+  const tg = window.Telegram?.WebApp;
+  if (tg?.MainButton) tg.MainButton.hide();
 
   if (tg) {
     tg.ready();
     tg.expand();
-    if (tg.MainButton) tg.MainButton.hide();
   }
 
-  // ЗВУКОВОЙ ДВИЖОК
+  // ===== Звуковой движок тапа =====
   let audioCtx = null;
-
   function playTapSound() {
     try {
       if (!audioCtx) {
@@ -464,10 +480,9 @@ function initGame() {
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
-
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-
+      
       osc.type = 'sine';
       osc.frequency.setValueAtTime(600, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.05);
@@ -480,111 +495,71 @@ function initGame() {
 
       osc.start();
       osc.stop(audioCtx.currentTime + 0.05);
-    } catch (e) {
-      console.warn('Audio warning:', e);
+    } catch (e) {}
+  }
+
+  function loadTelegramProfile() {
+    const user = tg?.initDataUnsafe?.user;
+
+    const elAvatar = document.getElementById('profileAvatar');
+    const elName   = document.getElementById('profileName');
+    const elUser   = document.getElementById('profileUsername');
+
+    if (!user) {
+      elName.textContent = 'Гость';
+      elUser.textContent = '@guest';
+      return;
+    }
+
+    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+    elName.textContent = fullName || 'Без имени';
+
+    elUser.textContent = user.username ? '@' + user.username : '@нет_юзернейма';
+
+    if (user.photo_url) {
+      elAvatar.innerHTML = `<img src="${user.photo_url}" alt="avatar">`;
+    } else {
+      elAvatar.textContent = '👤';
     }
   }
 
-  // ССЫЛКИ НА ЭЛЕМЕНТЫ DOM
-  const elBalance = document.getElementById('balance');
-  const profileBalance = document.getElementById('profileBalance');
-  const elEnergyFill = document.getElementById('energyFill');
-  const tapBtn = document.getElementById('tapBtn');
-  const coin = document.getElementById('coin');
-
-  const profileModal = document.getElementById('profileModal');
-  const profileBtn = document.getElementById('profileBtn');
-  const profileCloseBtn = document.getElementById('profileCloseBtn');
-  const profileWithdrawBtn = document.getElementById('profileWithdrawBtn');
-
-  const completeModal = document.getElementById('completeModal');
-  const completeBalance = document.getElementById('completeBalance');
-  const completeWithdrawBtn = document.getElementById('completeWithdrawBtn');
-
-  const zeroModal = document.getElementById('zeroModal');
-  const zeroCloseBtn = document.getElementById('zeroCloseBtn');
-
-  // СОСТОЯНИЕ
   const state = {
     balance: 0,
     energy: 0,
     maxEnergy: 1500,
     tapGain: 12,
     drainPerSec: 80,
-    drainCooldown: 450
+    drainCooldown: 450,
   };
 
   const INVOICE_ENDPOINT = '/.netlify/functions/create-invoice';
 
+  const elBalance     = document.getElementById('balance');
+  const elEnergyFill  = document.getElementById('energyFill');
+  const tapBtn        = document.getElementById('tapBtn');
+  const coin          = document.getElementById('coin');
+
+  const profileModal        = document.getElementById('profileModal');
+  const profileBalance      = document.getElementById('profileBalance');
+  const profileBtn          = document.getElementById('profileBtn');
+  const profileCloseBtn     = document.getElementById('profileCloseBtn');
+  const profileWithdrawBtn  = document.getElementById('profileWithdrawBtn');
+
+  const completeModal       = document.getElementById('completeModal');
+  const completeBalance     = document.getElementById('completeBalance');
+  const completeWithdrawBtn = document.getElementById('completeWithdrawBtn');
+
+  const zeroModal    = document.getElementById('zeroModal');
+  const zeroCloseBtn = document.getElementById('zeroCloseBtn');
+
   let lastTapTime = 0;
   let wasComplete = false;
+
+  // ===== МАКСИМАЛЬНО ПРОКАЧАННЫЙ ИИ-АНАЛИЗАТОР РИТМА =====
   let tapHistory = [];
   let preloadedInvoiceLink = null;
   let isFetchingInvoice = false;
-  let invoiceOpening = false;
-  let subscriptionPaid = false;
-  let isSafeLock = false;
-  let activePointerId = null;
 
-  // ===== ПОЛНОСТЬЮ ПЕРЕПИСАННЫЕ ФУНКЦИИ БАЛАНСА И РЕНДЕРА =====
-  function updateBalanceAndUI(rewardAmount) {
-    // 1. Прямое обновление математики баланса
-    state.balance += rewardAmount;
-    
-    // 2. Накопление энергии
-    state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
-
-    // 3. Прямой мгновенный рендеринг в DOM
-    const formattedBalance = Math.floor(state.balance).toLocaleString('ru-RU');
-    if (elBalance) elBalance.textContent = formattedBalance;
-    if (profileBalance) profileBalance.textContent = formattedBalance;
-
-    const energyPercent = Math.min(100, Math.max(0, (state.energy / state.maxEnergy) * 100));
-    if (elEnergyFill) {
-      elEnergyFill.style.width = energyPercent.toFixed(2) + '%';
-    }
-  }
-
-  function renderStateDirectly() {
-    const formattedBalance = Math.floor(state.balance).toLocaleString('ru-RU');
-    if (elBalance) elBalance.textContent = formattedBalance;
-    if (profileBalance) profileBalance.textContent = formattedBalance;
-
-    const energyPercent = Math.min(100, Math.max(0, (state.energy / state.maxEnergy) * 100));
-    if (elEnergyFill) {
-      elEnergyFill.style.width = energyPercent.toFixed(2) + '%';
-    }
-  }
-  // ============================================================
-
-  // ПРОФИЛЬ TELEGRAM
-  function loadTelegramProfile() {
-    const user = tg?.initDataUnsafe?.user;
-    const elAvatar = document.getElementById('profileAvatar');
-    const elName = document.getElementById('profileName');
-    const elUser = document.getElementById('profileUsername');
-
-    if (!user) {
-      if (elName) elName.textContent = 'Гость';
-      if (elUser) elUser.textContent = '@guest';
-      return;
-    }
-
-    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
-    if (elName) elName.textContent = fullName || 'Без имени';
-    if (elUser) elUser.textContent = user.username ? '@' + user.username : '@нет_юзернейма';
-
-    if (user.photo_url && elAvatar) {
-      const img = document.createElement('img');
-      img.src = user.photo_url;
-      img.alt = 'avatar';
-      elAvatar.replaceChildren(img);
-    } else if (elAvatar) {
-      elAvatar.textContent = '👤';
-    }
-  }
-
-  // ПРЕДЗАГРУЗКА ИНВОЙСА
   async function preloadInvoice() {
     if (isFetchingInvoice || preloadedInvoiceLink || subscriptionPaid) return;
     isFetchingInvoice = true;
@@ -595,262 +570,192 @@ function initGame() {
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store'
       });
-
-      if (!response.ok) throw new Error('Invoice network error');
-
       const data = await response.json();
-      if (data.invoiceLink) {
+      if (response.ok && data.invoiceLink) {
         preloadedInvoiceLink = data.invoiceLink;
       }
     } catch (e) {
-      console.warn('Preload invoice warning:', e);
+      console.error('AI Preload error:', e);
     } finally {
       isFetchingInvoice = false;
     }
   }
 
-  // БЕЗОПАСНЫЙ ВЫЗОВ ОКОШКА С ИНЕРЦИОННЫМ БЛОКОМ КНОПКИ
-  function triggerSafeInvoiceWindow() {
-    if (invoiceOpening || subscriptionPaid || isSafeLock) return;
+  function triggerSmartInvoice() {
+    if (invoiceOpening || subscriptionPaid) return;
 
-    if (!tg || typeof tg.openInvoice !== 'function') {
-      console.warn('Telegram openInvoice API is missing');
-      return;
-    }
-
-    isSafeLock = true;
-    tapBtn.classList.add('locked');
-
-    const unlockButton = () => {
-      isSafeLock = false;
-      tapBtn.classList.remove('locked');
-    };
-
-    const executeInvoiceOpen = (link) => {
-      if (!link) {
-        unlockButton();
-        return;
-      }
-
+    if (preloadedInvoiceLink) {
       invoiceOpening = true;
+      const link = preloadedInvoiceLink;
+      preloadedInvoiceLink = null;
 
-      try {
-        tg.openInvoice(link, (status) => {
-          invoiceOpening = false;
-
-          if (status === 'paid') {
-            subscriptionPaid = true;
-            try {
-              tg.HapticFeedback?.notificationOccurred('success');
-            } catch (err) {}
-          }
-
-          // Умная задержка разблокировки защищает окно от случайного закрытия тапом
-          setTimeout(unlockButton, 400);
-        });
-      } catch (err) {
-        console.error('Invoice execution error:', err);
+      tg.openInvoice(link, (status) => {
         invoiceOpening = false;
-        unlockButton();
-      }
-    };
-
-    const linkToOpen = preloadedInvoiceLink;
-    preloadedInvoiceLink = null;
-
-    if (linkToOpen) {
-      executeInvoiceOpen(linkToOpen);
-      return;
+        if (status === 'paid') {
+          subscriptionPaid = true;
+          if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        }
+      });
+    } else {
+      openTelegramSubscription();
     }
+  }
 
-    fetch(INVOICE_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store'
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.invoiceLink) {
-        executeInvoiceOpen(data.invoiceLink);
-      } else {
-        unlockButton();
+  let invoiceOpening = false;
+  let subscriptionPaid = false;
+
+  async function openTelegramSubscription() {
+    if (invoiceOpening || subscriptionPaid) return;
+    invoiceOpening = true;
+
+    try {
+      if (!tg || typeof tg.openInvoice !== 'function') {
+        throw new Error('Открой игру внутри Telegram, чтобы оплатить подписку Stars.');
       }
-    })
-    .catch(() => {
-      unlockButton();
-    });
+
+      const response = await fetch(INVOICE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store'
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.invoiceLink) {
+        throw new Error(data.error || 'Telegram не смог создать счёт.');
+      }
+
+      tg.openInvoice(data.invoiceLink, (status) => {
+        invoiceOpening = false;
+        if (status === 'paid') {
+          subscriptionPaid = true;
+          if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        }
+      });
+    } catch (error) {
+      invoiceOpening = false;
+      console.error('Telegram subscription error:', error);
+      if (tg && typeof tg.showAlert === 'function') {
+        tg.showAlert(error.message || 'Не удалось открыть оплату.');
+      } else {
+        alert(error.message || 'Открой игру внутри Telegram.');
+      }
+    }
   }
 
-  // ВИЗУАЛ ВЫЛЕТАЮЩИХ ЦИФР
-  function spawnFloatOnStar(value) {
-    if (!coin) return;
-    const rect = coin.getBoundingClientRect();
-    const padding = 20;
-
-    const x = rect.left + padding + Math.random() * (rect.width - padding * 2);
-    const y = rect.top + padding + Math.random() * (rect.height - padding * 2);
-
-    const el = document.createElement('div');
-    el.className = 'float-num';
-    el.textContent = '+' + value;
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 900);
-  }
-
-  function randomReward() {
-    return Math.floor(Math.random() * 5) + 1;
-  }
-
-  // ОСНОВНОЙ ОБРАБОТЧИК КЛИКА
   function doTap() {
-    if (isSafeLock) return;
-
     playTapSound();
 
     const now = performance.now();
     const interval = lastTapTime > 0 ? now - lastTapTime : 500;
     lastTapTime = now;
 
-    // Генерация случайной награды
-    const reward = randomReward();
-
-    // ОБНОВЛЕНИЕ БАЛАНСА И ПОЛОСЫ
-    updateBalanceAndUI(reward);
-
-    // ПОКАЗ ЦИФР НА МОНЕТЕ
-    spawnFloatOnStar(reward);
-
-    // УЛЬТИМАТИВНЫЙ ИИ-АНАЛИЗАТОР ИНЕРЦИИ
-    if (interval >= 60 && interval <= 650) {
+    // Сбор статистики темпа для ИИ (диапазон идеального ритма: 225 - 375 мс)
+    if (interval >= 225 && interval <= 375) {
       tapHistory.push(interval);
     } else {
-      tapHistory = [];
+      tapHistory = []; // Сброс при выходе из комфортного ритма
       preloadedInvoiceLink = null;
     }
 
-    if (tapHistory.length > 5) {
-      tapHistory.shift();
+    if (tapHistory.length > 5) tapHistory.shift();
+
+    // Ультимативный ИИ-расчет инерции и предзагрузки
+    if (tapHistory.length >= 3) {
+      const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
+      
+      if (avgInterval >= 225 && avgInterval <= 375) {
+        if (!preloadedInvoiceLink) {
+          preloadInvoice();
+        }
+        
+        if (tapHistory.length >= 5) {
+          tapHistory = [];
+          triggerSmartInvoice(); // Моментальный вызов окна по инерции
+        }
+      }
     }
 
-    // Предзагрузка инвойса
-    if (tapHistory.length >= 2 && !preloadedInvoiceLink && !isFetchingInvoice) {
-      preloadInvoice();
-    }
+    const reward = randomReward();
+    state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
+    state.balance += reward;
+    spawnFloatOnStar(reward);
 
-    // Триггер вызова окна оплаты на 5-м тапе ритма
-    if (tapHistory.length >= 5) {
-      tapHistory = [];
-      triggerSafeInvoiceWindow();
-    }
+    wasComplete = false;
 
-    // Анимация удара по монете
-    if (coin) {
-      coin.classList.remove('hit');
-      void coin.offsetWidth;
-      coin.classList.add('hit');
-    }
+    coin.classList.remove('hit');
+    void coin.offsetWidth;
+    coin.classList.add('hit');
 
-    // Условие полной шкалы энергии
+    render();
+
     if (state.energy >= state.maxEnergy && !wasComplete) {
       wasComplete = true;
-      if (completeBalance) {
-        completeBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
-      }
-      if (completeModal) {
-        completeModal.classList.add('active');
-      }
+      completeBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+      completeModal.classList.add('active');
     }
   }
 
-  // ОБРАБОТЧИК КЛИКОВ С ЗАЩИТОЙ ОТ МУЛЬТИТАЧА
-  tapBtn.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    if (activePointerId !== null || isSafeLock) return;
+  tapBtn.addEventListener('click', doTap);
 
-    activePointerId = e.pointerId;
-    doTap();
-  });
-
-  window.addEventListener('pointerup', (e) => {
-    if (e.pointerId === activePointerId) {
-      activePointerId = null;
-    }
-  });
-
-  window.addEventListener('pointercancel', (e) => {
-    if (e.pointerId === activePointerId) {
-      activePointerId = null;
-    }
-  });
-
-  tapBtn.addEventListener('contextmenu', (e) => e.preventDefault());
-
-  // ЦИКЛ ПАССИВНОГО СЛИВА ЭНЕРГИИ
   let lastTime = performance.now();
+  let balanceAtDrainStart = null;
+  let energyAtDrainStart = 0;
 
   function loop(now) {
-    const dt = Math.min((now - lastTime) / 1000, 0.1);
+    const dt = (now - lastTime) / 1000;
     lastTime = now;
 
     const timeSinceTap = now - lastTapTime;
 
+    // Пассивный слив энергии при бездействии более 450 мс (без штрафа на баланс)
     if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
       state.energy -= state.drainPerSec * dt;
-      if (state.energy < 0) {
-        state.energy = 0;
-      }
+      if (state.energy < 0) state.energy = 0;
 
       tapHistory = [];
       preloadedInvoiceLink = null;
 
-      renderStateDirectly();
+      render();
     }
 
     requestAnimationFrame(loop);
   }
 
-  // УПРАВЛЕНИЕ МОДАЛЬНЫМИ ОКНАМИ
-  profileBtn.addEventListener('click', () => {
-    if (profileModal) profileModal.classList.add('active');
-  });
-
+  // Модальные окна
+  profileBtn.addEventListener('click', () => profileModal.classList.add('active'));
+  
   profileCloseBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (profileModal) profileModal.classList.remove('active');
+    profileModal.classList.remove('active');
   });
 
   profileWithdrawBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (profileModal) profileModal.classList.remove('active');
-    if (zeroModal) zeroModal.classList.add('active');
+    profileModal.classList.remove('active');
+    zeroModal.classList.add('active');
   });
 
   zeroCloseBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (zeroModal) zeroModal.classList.remove('active');
+    zeroModal.classList.remove('active');
   });
 
   completeWithdrawBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (completeModal) completeModal.classList.remove('active');
+    completeModal.classList.remove('active');
   });
 
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        overlay.classList.remove('active');
-      }
-    });
+    overlay.addEventListener('click', (e) => e.stopPropagation());
   });
 
-  // ИНИЦИАЛИЗАЦИЯ
+  document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (e) => e.stopPropagation());
+  });
+
   loadTelegramProfile();
-  renderStateDirectly();
+  render();
   requestAnimationFrame(loop);
-}
 </script>
 
 </body>
