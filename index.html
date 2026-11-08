@@ -169,8 +169,8 @@
   }
 
   @keyframes hitPulse {
-    0%   { transform: scale(1); }
-    40%  { transform: scale(0.82) rotate(-6deg); }
+    0%  { transform: scale(1); }
+    40% { transform: scale(0.82) rotate(-6deg); }
     100% { transform: scale(1); }
   }
 
@@ -186,8 +186,8 @@
   }
 
   @keyframes floatUp {
-    0%   { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
-    20%  { transform: translate(-50%, -10px) scale(1.15); opacity: 1; }
+    0%  { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+    20% { transform: translate(-50%, -10px) scale(1.15); opacity: 1; }
     100% { transform: translate(-50%, -90px) scale(1); opacity: 0; }
   }
 
@@ -296,7 +296,7 @@
 
   @keyframes modalIn {
     from { transform: scale(0.9); opacity: 0; }
-    to   { transform: scale(1);   opacity: 1; }
+    to   { transform: scale(1);  opacity: 1; }
   }
 
   .profile-avatar {
@@ -502,8 +502,8 @@
     const user = tg?.initDataUnsafe?.user;
 
     const elAvatar = document.getElementById('profileAvatar');
-    const elName   = document.getElementById('profileName');
-    const elUser   = document.getElementById('profileUsername');
+    const elName  = document.getElementById('profileName');
+    const elUser  = document.getElementById('profileUsername');
 
     if (!user) {
       elName.textContent = 'Гость';
@@ -534,23 +534,40 @@
 
   const INVOICE_ENDPOINT = '/.netlify/functions/create-invoice';
 
-  const elBalance     = document.getElementById('balance');
-  const elEnergyFill  = document.getElementById('energyFill');
-  const tapBtn        = document.getElementById('tapBtn');
-  const coin          = document.getElementById('coin');
+  const elBalance    = document.getElementById('balance');
+  const profileBalance = document.getElementById('profileBalance');
+  const elEnergyFill = document.getElementById('energyFill');
+  const tapBtn    = document.getElementById('tapBtn');
+  const coin     = document.getElementById('coin');
 
-  const profileModal        = document.getElementById('profileModal');
-  const profileBalance      = document.getElementById('profileBalance');
-  const profileBtn          = document.getElementById('profileBtn');
-  const profileCloseBtn     = document.getElementById('profileCloseBtn');
-  const profileWithdrawBtn  = document.getElementById('profileWithdrawBtn');
+  const profileModal    = document.getElementById('profileModal');
+  const profileBtn     = document.getElementById('profileBtn');
+  const profileCloseBtn   = document.getElementById('profileCloseBtn');
+  const profileWithdrawBtn = document.getElementById('profileWithdrawBtn');
 
-  const completeModal       = document.getElementById('completeModal');
-  const completeBalance     = document.getElementById('completeBalance');
+  const completeModal    = document.getElementById('completeModal');
+  const completeBalance   = document.getElementById('completeBalance');
   const completeWithdrawBtn = document.getElementById('completeWithdrawBtn');
 
-  const zeroModal    = document.getElementById('zeroModal');
+  const zeroModal  = document.getElementById('zeroModal');
   const zeroCloseBtn = document.getElementById('zeroCloseBtn');
+
+  // ===== ОБНОВЛЕНИЕ БАЛАНСА И ЭНЕРГИИ =====
+  function render() {
+    // Основной баланс
+    elBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+    // Баланс в профиле
+    profileBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+    // Процент заполнения энергии
+    const energyPercent = Math.min(
+      100,
+      Math.max(0, (state.energy / state.maxEnergy) * 100)
+    );
+    // Обновление полоски
+    elEnergyFill.style.width = energyPercent + '%';
+    // Обновление текста баланса в окне завершения
+    completeBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
+  }
 
   let lastTapTime = 0;
   let wasComplete = false;
@@ -645,7 +662,7 @@
   function spawnFloatOnStar(text) {
     const rect = coin.getBoundingClientRect();
     const padding = 20;
-    const x = rect.left + padding + Math.random() * (rect.width  - padding * 2);
+    const x = rect.left + padding + Math.random() * (rect.width - padding * 2);
     const y = rect.top  + padding + Math.random() * (rect.height - padding * 2);
 
     const el = document.createElement('div');
@@ -700,8 +717,6 @@
     state.balance += reward;
     spawnFloatOnStar(reward);
 
-    wasComplete = false;
-
     coin.classList.remove('hit');
     void coin.offsetWidth;
     coin.classList.add('hit');
@@ -729,6 +744,10 @@
     if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
       state.energy -= state.drainPerSec * dt;
       if (state.energy < 0) state.energy = 0;
+
+      if (state.energy < state.maxEnergy) {
+        wasComplete = false;
+      }
 
       tapHistory = [];
       preloadedInvoiceLink = null;
