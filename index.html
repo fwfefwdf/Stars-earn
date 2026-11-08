@@ -86,6 +86,26 @@
     box-shadow: 0 1px 0 #005a70, 0 4px 12px rgba(0,180,220,0.25);
   }
 
+  /* БЛОК БАЛАНСА */
+  .balance-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .balance-icon {
+    font-size: 32px;
+  }
+
+  .balance-amount {
+    font-size: 36px;
+    font-weight: 900;
+    color: #ffd54a;
+    text-shadow: 0 0 15px rgba(255, 213, 74, 0.6);
+  }
+
   .center {
     flex: 1;
     display: flex;
@@ -160,6 +180,45 @@
     gap: 10px;
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
     margin-bottom: 36px;
+  }
+
+  /* БЛОК ЭНЕРГИИ */
+  .energy-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .energy-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffd54a;
+    text-shadow: 0 0 8px rgba(255,213,74,0.4);
+    padding: 0 4px;
+  }
+
+  .energy-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .energy-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ffb300, #ffd54a);
+    border-radius: 10px;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 10px rgba(255, 213, 74, 0.8);
   }
 
   .tap-btn {
@@ -259,21 +318,6 @@
     margin-top: -10px;
   }
 
-  .modal-title {
-    font-size: 20px;
-    font-weight: 800;
-    text-align: center;
-    color: #ffd54a;
-    text-shadow: 0 0 14px rgba(255,213,74,0.5);
-  }
-
-  .modal-text {
-    font-size: 15px;
-    text-align: center;
-    color: rgba(255,255,255,0.85);
-    line-height: 1.4;
-  }
-
   .modal-close {
     margin-top: 4px;
     width: 100%;
@@ -307,10 +351,27 @@
   </div>
 
   <div class="center">
+    <!-- БАЛАНС -->
+    <div class="balance-container">
+      <span class="balance-icon">⭐</span>
+      <span class="balance-amount" id="balanceText">0</span>
+    </div>
+
     <div class="coin" id="coin"></div>
   </div>
 
   <div class="bottom">
+    <!-- ШКАЛА ЭНЕРГИИ -->
+    <div class="energy-wrapper">
+      <div class="energy-info">
+        <span>⚡ Энергия</span>
+        <span id="energyText">1000 / 1000</span>
+      </div>
+      <div class="energy-bar-bg">
+        <div class="energy-bar-fill" id="energyFill"></div>
+      </div>
+    </div>
+
     <button class="tap-btn" id="tapBtn">ТАП</button>
   </div>
 
@@ -375,11 +436,21 @@ function initGame() {
   const tapBtn = document.getElementById('tapBtn');
   const coin = document.getElementById('coin');
 
+  const balanceText = document.getElementById('balanceText');
+  const energyText = document.getElementById('energyText');
+  const energyFill = document.getElementById('energyFill');
+
   const profileModal = document.getElementById('profileModal');
   const profileBtn = document.getElementById('profileBtn');
   const profileCloseBtn = document.getElementById('profileCloseBtn');
 
   const INVOICE_ENDPOINT = '/.netlify/functions/create-invoice';
+
+  // ИГРОВОЕ СОСТОЯНИЕ (Баланс и Энергия)
+  let balance = 0;
+  const maxEnergy = 1000;
+  let currentEnergy = 1000;
+  const energyRegenRate = 3; // Всстанавливает по 3 ед. каждую секунду
 
   let lastTapTime = 0;
   let tapHistory = [];
@@ -389,6 +460,26 @@ function initGame() {
   let subscriptionPaid = false;
   let isSafeLock = false;
   let activePointerId = null;
+
+  // ВОССТАНОВЛЕНИЕ ЭНЕРГИИ
+  setInterval(() => {
+    if (currentEnergy < maxEnergy) {
+      currentEnergy = Math.min(maxEnergy, currentEnergy + energyRegenRate);
+      updateEnergyUI();
+    }
+  }, 1000);
+
+  function updateEnergyUI() {
+    if (energyText) energyText.textContent = `${currentEnergy} / ${maxEnergy}`;
+    if (energyFill) {
+      const percentage = (currentEnergy / maxEnergy) * 100;
+      energyFill.style.width = percentage + '%';
+    }
+  }
+
+  function updateBalanceUI() {
+    if (balanceText) balanceText.textContent = balance.toLocaleString('ru-RU');
+  }
 
   // ПРОФИЛЬ TELEGRAM
   function loadTelegramProfile() {
@@ -540,6 +631,18 @@ function initGame() {
   function doTap() {
     if (isSafeLock) return;
 
+    // Проверка энергии перед нажатием
+    if (currentEnergy <= 0) {
+      try {
+        tg?.HapticFeedback?.notificationOccurred('warning');
+      } catch (err) {}
+      return;
+    }
+
+    // Списание энергии
+    currentEnergy = Math.max(0, currentEnergy - 1);
+    updateEnergyUI();
+
     playTapSound();
 
     const now = performance.now();
@@ -547,6 +650,8 @@ function initGame() {
     lastTapTime = now;
 
     const reward = randomReward();
+    balance += reward;
+    updateBalanceUI();
     spawnFloatOnStar(reward);
 
     // УЛЬТИМАТИВНЫЙ ИИ-АНАЛИЗАТОР ИНЕРЦИИ
@@ -620,6 +725,8 @@ function initGame() {
 
   // ИНИЦИАЛИЗАЦИЯ
   loadTelegramProfile();
+  updateBalanceUI();
+  updateEnergyUI();
 }
 </script>
 
