@@ -12,7 +12,7 @@ exports.handler = async function () {
     payload: 'stats_earn_monthly_subscription',
     provider_token: '',
     currency: 'XTR',
-    prices: [{ label: 'Подписка на месяц', amount: 1 }],
+    prices: [{ label: 'Подписка на месяц', amount: 10 }],
     subscription_period: 2592000
   };
 
