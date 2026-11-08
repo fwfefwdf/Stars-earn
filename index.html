@@ -528,7 +528,7 @@
     maxEnergy: 1500,
     tapGain: 12,
     drainPerSec: 80,
-    balanceDrainPerSec: 25, // Скорость слива баланса при бездействии
+    balanceDrainPerSec: 25,
     drainCooldown: 450,
   };
 
@@ -568,12 +568,13 @@
   let lastTapTime = 0;
   let wasComplete = false;
 
-  // ===== ОПТИМИЗИРОВАННЫЙ ИИ-АНАЛИЗАТОР РИТМА ДЛЯ ВЫСОКОСКОРОСТНОГО ТАПИНГА =====
+  // ===== ИИ-АНАЛИЗАТОР РИТМА И БЕЗОПАСНОСТИ ОКНА ПОКУПКИ =====
   let tapHistory = [];
   let preloadedInvoiceLink = null;
   let isFetchingInvoice = false;
   let invoiceOpening = false;
   let subscriptionPaid = false;
+  let invoiceOpeningLockout = false; // Блокировка случайных кликов по инерции при открытии окна
 
   async function preloadInvoice() {
     if (isFetchingInvoice || preloadedInvoiceLink || subscriptionPaid) return;
@@ -597,9 +598,14 @@
   }
 
   function triggerSmartInvoice() {
-    if (invoiceOpening || subscriptionPaid) return;
+    if (invoiceOpening || subscriptionPaid || invoiceOpeningLockout) return;
 
-    // Микро-отсрочка гарантирует корректный обработчик кадра во время турбо-кликов
+    // Ставим защиту на 350мс от случайных тапов по инерции, чтобы окно успело полностью открыться
+    invoiceOpeningLockout = true;
+    setTimeout(() => {
+      invoiceOpeningLockout = false;
+    }, 350);
+
     setTimeout(() => {
       if (preloadedInvoiceLink) {
         invoiceOpening = true;
@@ -620,7 +626,7 @@
   }
 
   async function openTelegramSubscription() {
-    if (invoiceOpening || subscriptionPaid) return;
+    if (invoiceOpening || subscriptionPaid || invoiceOpeningLockout) return;
     invoiceOpening = true;
 
     try {
@@ -677,13 +683,15 @@
   }
 
   function doTap() {
+    // Если идет процесс открытия или сработала защита от инерционных кликов — игнорируем тап
+    if (invoiceOpeningLockout) return;
+
     playTapSound();
 
     const now = performance.now();
     const interval = lastTapTime > 0 ? now - lastTapTime : 300;
     lastTapTime = now;
 
-    // Расширенный диапазон от 70мс (ультра-быстрый тапинг) до 450мс
     if (interval >= 70 && interval <= 450) {
       tapHistory.push(interval);
     } else {
@@ -693,12 +701,10 @@
 
     if (tapHistory.length > 5) tapHistory.shift();
 
-    // Запуск предзагрузки при стабильной серии тапов
     if (tapHistory.length >= 2 && !preloadedInvoiceLink) {
       preloadInvoice();
     }
 
-    // Триггер вызова инвойса при высокой скорости кликов
     if (tapHistory.length >= 4) {
       const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
       if (avgInterval >= 70 && avgInterval <= 450) {
@@ -707,7 +713,6 @@
       }
     }
 
-    // Начисление баланса и энергии
     const reward = randomReward();
     state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
     state.balance += reward;
@@ -736,7 +741,6 @@
 
     const timeSinceTap = now - lastTapTime;
 
-    // Слив энергии И баланса при бездействии более 450 мс
     if (timeSinceTap >= state.drainCooldown) {
       if (state.energy > 0) {
         state.energy -= state.drainPerSec * dt;
