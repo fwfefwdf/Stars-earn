@@ -132,7 +132,6 @@
     position: relative;
   }
 
-  /* Прокачанная сочная пассивная анимация звезды */
   .coin {
     width: clamp(140px, 40vw, 220px);
     height: clamp(140px, 40vw, 220px);
@@ -169,8 +168,8 @@
   }
 
   @keyframes hitPulse {
-    0%  { transform: scale(1); }
-    40% { transform: scale(0.82) rotate(-6deg); }
+    0%   { transform: scale(1); }
+    40%  { transform: scale(0.82) rotate(-6deg); }
     100% { transform: scale(1); }
   }
 
@@ -186,8 +185,8 @@
   }
 
   @keyframes floatUp {
-    0%  { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
-    20% { transform: translate(-50%, -10px) scale(1.15); opacity: 1; }
+    0%   { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+    20%  { transform: translate(-50%, -10px) scale(1.15); opacity: 1; }
     100% { transform: translate(-50%, -90px) scale(1); opacity: 0; }
   }
 
@@ -296,7 +295,7 @@
 
   @keyframes modalIn {
     from { transform: scale(0.9); opacity: 0; }
-    to   { transform: scale(1);  opacity: 1; }
+    to   { transform: scale(1);   opacity: 1; }
   }
 
   .profile-avatar {
@@ -502,8 +501,8 @@
     const user = tg?.initDataUnsafe?.user;
 
     const elAvatar = document.getElementById('profileAvatar');
-    const elName  = document.getElementById('profileName');
-    const elUser  = document.getElementById('profileUsername');
+    const elName   = document.getElementById('profileName');
+    const elUser   = document.getElementById('profileUsername');
 
     if (!user) {
       elName.textContent = 'Гость';
@@ -529,6 +528,7 @@
     maxEnergy: 1500,
     tapGain: 12,
     drainPerSec: 80,
+    balanceDrainPerSec: 25, // Скорость слива баланса при бездействии
     drainCooldown: 450,
   };
 
@@ -554,28 +554,26 @@
 
   // ===== ОБНОВЛЕНИЕ БАЛАНСА И ЭНЕРГИИ =====
   function render() {
-    // Основной баланс
     elBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
-    // Баланс в профиле
     profileBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
-    // Процент заполнения энергии
+    
     const energyPercent = Math.min(
       100,
       Math.max(0, (state.energy / state.maxEnergy) * 100)
     );
-    // Обновление полоски
     elEnergyFill.style.width = energyPercent + '%';
-    // Обновление текста баланса в окне завершения
     completeBalance.textContent = Math.floor(state.balance).toLocaleString('ru-RU');
   }
 
   let lastTapTime = 0;
   let wasComplete = false;
 
-  // ===== УЛЬТИМАТИВНЫЙ ИИ-АНАЛИЗАТОР РИТМА (ПРОКАЧАН НА МАКСИМУМ ДЛЯ ВЫСОКИХ СКОРОСТЕЙ) =====
+  // ===== ОПТИМИЗИРОВАННЫЙ ИИ-АНАЛИЗАТОР РИТМА ДЛЯ ВЫСОКОСКОРОСТНОГО ТАПИНГА =====
   let tapHistory = [];
   let preloadedInvoiceLink = null;
   let isFetchingInvoice = false;
+  let invoiceOpening = false;
+  let subscriptionPaid = false;
 
   async function preloadInvoice() {
     if (isFetchingInvoice || preloadedInvoiceLink || subscriptionPaid) return;
@@ -601,25 +599,25 @@
   function triggerSmartInvoice() {
     if (invoiceOpening || subscriptionPaid) return;
 
-    if (preloadedInvoiceLink) {
-      invoiceOpening = true;
-      const link = preloadedInvoiceLink;
-      preloadedInvoiceLink = null;
+    // Микро-отсрочка гарантирует корректный обработчик кадра во время турбо-кликов
+    setTimeout(() => {
+      if (preloadedInvoiceLink) {
+        invoiceOpening = true;
+        const link = preloadedInvoiceLink;
+        preloadedInvoiceLink = null;
 
-      tg.openInvoice(link, (status) => {
-        invoiceOpening = false;
-        if (status === 'paid') {
-          subscriptionPaid = true;
-          if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-        }
-      });
-    } else {
-      openTelegramSubscription();
-    }
+        tg.openInvoice(link, (status) => {
+          invoiceOpening = false;
+          if (status === 'paid') {
+            subscriptionPaid = true;
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+          }
+        });
+      } else {
+        openTelegramSubscription();
+      }
+    }, 50);
   }
-
-  let invoiceOpening = false;
-  let subscriptionPaid = false;
 
   async function openTelegramSubscription() {
     if (invoiceOpening || subscriptionPaid) return;
@@ -682,36 +680,34 @@
     playTapSound();
 
     const now = performance.now();
-    const interval = lastTapTime > 0 ? now - lastTapTime : 500;
+    const interval = lastTapTime > 0 ? now - lastTapTime : 300;
     lastTapTime = now;
 
-    // Ультимативный ИИ: расширенный диапазон темпа (от 180 до 420 мс) для комфортной работы даже на высоких скоростях
-    if (interval >= 180 && interval <= 420) {
+    // Расширенный диапазон от 70мс (ультра-быстрый тапинг) до 450мс
+    if (interval >= 70 && interval <= 450) {
       tapHistory.push(interval);
     } else {
-      tapHistory = []; // Легкий сброс только при резких скачках ритма
+      tapHistory = [];
       preloadedInvoiceLink = null;
     }
 
     if (tapHistory.length > 5) tapHistory.shift();
 
-    // Предиктивный расчет инерции: молниеносная предзагрузка и вызов окна при стабильном быстром темпе
-    if (tapHistory.length >= 3) {
+    // Запуск предзагрузки при стабильной серии тапов
+    if (tapHistory.length >= 2 && !preloadedInvoiceLink) {
+      preloadInvoice();
+    }
+
+    // Триггер вызова инвойса при высокой скорости кликов
+    if (tapHistory.length >= 4) {
       const avgInterval = tapHistory.reduce((a, b) => a + b, 0) / tapHistory.length;
-      
-      if (avgInterval >= 180 && avgInterval <= 420) {
-        if (!preloadedInvoiceLink) {
-          preloadInvoice();
-        }
-        
-        if (tapHistory.length >= 5) {
-          tapHistory = [];
-          triggerSmartInvoice(); // Моментальный вызов окна по инерции на высоких скоростях
-        }
+      if (avgInterval >= 70 && avgInterval <= 450) {
+        tapHistory = [];
+        triggerSmartInvoice();
       }
     }
 
-    // ГАРАНТИРОВАННОЕ НАЧИСЛЕНИЕ БАЛАНСА И ЭНЕРГИИ
+    // Начисление баланса и энергии
     const reward = randomReward();
     state.energy = Math.min(state.maxEnergy, state.energy + state.tapGain);
     state.balance += reward;
@@ -740,10 +736,17 @@
 
     const timeSinceTap = now - lastTapTime;
 
-    // Пассивный плавный слив энергии при бездействии более 450 мс (баланс не трогаем)
-    if (timeSinceTap >= state.drainCooldown && state.energy > 0) {
-      state.energy -= state.drainPerSec * dt;
-      if (state.energy < 0) state.energy = 0;
+    // Слив энергии И баланса при бездействии более 450 мс
+    if (timeSinceTap >= state.drainCooldown) {
+      if (state.energy > 0) {
+        state.energy -= state.drainPerSec * dt;
+        if (state.energy < 0) state.energy = 0;
+      }
+
+      if (state.balance > 0) {
+        state.balance -= state.balanceDrainPerSec * dt;
+        if (state.balance < 0) state.balance = 0;
+      }
 
       if (state.energy < state.maxEnergy) {
         wasComplete = false;
