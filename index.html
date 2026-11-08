@@ -321,23 +321,7 @@
     <div class="profile-avatar" id="profileAvatar">👤</div>
     <div class="profile-name" id="profileName">Telegram Name</div>
     <div class="profile-username" id="profileUsername">@username</div>
-    <button class="modal-close" id="profileWithdrawBtn">Вывести</button>
     <button class="modal-close" id="profileCloseBtn" style="background:linear-gradient(180deg,#5a5a5a,#3d3d3d);color:#fff;box-shadow:0 5px 0 #222;">Закрыть</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="completeModal">
-  <div class="modal">
-    <div class="modal-title">Поздравляем!</div>
-    <button class="modal-close" id="completeWithdrawBtn">Вывести все 🌟</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="zeroModal">
-  <div class="modal">
-    <div class="modal-title">У тебя щас 0</div>
-    <div class="modal-text">Протапай до конца что бы вывести звёзды! 🌟</div>
-    <button class="modal-close" id="zeroCloseBtn">Ок</button>
   </div>
 </div>
 
@@ -394,13 +378,6 @@ function initGame() {
   const profileModal = document.getElementById('profileModal');
   const profileBtn = document.getElementById('profileBtn');
   const profileCloseBtn = document.getElementById('profileCloseBtn');
-  const profileWithdrawBtn = document.getElementById('profileWithdrawBtn');
-
-  const completeModal = document.getElementById('completeModal');
-  const completeWithdrawBtn = document.getElementById('completeWithdrawBtn');
-
-  const zeroModal = document.getElementById('zeroModal');
-  const zeroCloseBtn = document.getElementById('zeroCloseBtn');
 
   const INVOICE_ENDPOINT = '/.netlify/functions/create-invoice';
 
@@ -631,22 +608,6 @@ function initGame() {
   profileCloseBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (profileModal) profileModal.classList.remove('active');
-  });
-
-  profileWithdrawBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (profileModal) profileModal.classList.remove('active');
-    if (zeroModal) zeroModal.classList.add('active');
-  });
-
-  zeroCloseBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (zeroModal) zeroModal.classList.remove('active');
-  });
-
-  completeWithdrawBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (completeModal) completeModal.classList.remove('active');
   });
 
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
